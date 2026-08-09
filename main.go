@@ -111,7 +111,7 @@ func main() {
 
 	errGrp.Go(func() error {
 
-		// TODO: Zertifikate bei "letsencrypt"
+		// TODO: Zertificates from "letsencrypt"
 
 		// if err := serverHTTPS.ListenAndServeTLS("cert.pem", "key.pem"); err != nil {
 		if err := serverHTTPS.ListenAndServe(); err != nil {
@@ -143,12 +143,12 @@ func main() {
 		//
 		// A server-specific error is detected whenever one of the 'errGrp.Go'
 		// functions returns an error. This will cancel the context too, which will
-		// cause this function to return.
+		// cause this function to run.
 		//-------------------------------------------------------------------------
 
 		<-ctx.Done()
 
-		log.Info("Shutdown signal received. Servers are shutting down...")
+		log.Info("Shutdown signal received or error detected. Servers are shutting down...")
 
 		//-------------------------------------------------------------------------
 		// Set a separate timeout for shutdown (e.g., 10 seconds)
