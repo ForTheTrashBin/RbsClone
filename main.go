@@ -12,24 +12,33 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/ForTheTrashBin/RbsClone/internal/osspecific"
+	"github.com/ForTheTrashBin/RbsClone/internal/serverconfig"
 	"golang.org/x/sync/errgroup"
 )
 
 func httpHandler(w http.ResponseWriter, r *http.Request) {
 
-	w.Write([]byte("Insecure work completed!"))
-	/*
-	   // Striktes HTTP -> HTTPS Redirect
+	//-------------------------------------------------------------------------
+	// Striktes HTTP -> HTTPS Redirect
+	//-------------------------------------------------------------------------
 
-	   target := "https://" + r.Host + r.URL.Path
+	host := r.Host
 
-	   if len(r.URL.RawQuery) > 0 {
+	if h, p, err := net.SplitHostPort(r.Host); err == nil {
 
-	   		target += "?" + r.URL.RawQuery
-	   	}
+		if p == serverconfig.GetHttpPort() {
 
-	   http.Redirect(w, r, target, http.StatusMovedPermanently) // could be http.StatusTemporaryRedirect too
-	*/
+			host = net.JoinHostPort(h, serverconfig.GetHttpsPort())
+		}
+	} else {
+
+		host = net.JoinHostPort(r.Host, serverconfig.GetHttpsPort())
+	}
+
+	target := "https://" + host + r.URL.RequestURI()
+
+	http.Redirect(w, r, target, http.StatusTemporaryRedirect) // could be http.StatusMovedPermanently too
 }
 
 func httpsHandler(w http.ResponseWriter, r *http.Request) {
@@ -66,6 +75,18 @@ func main() {
 	defer stopSignaling() // Don't forget to stop the signal notification when done
 
 	//-------------------------------------------------------------------------
+	// Disable echo for the duration of the processing
+	//-------------------------------------------------------------------------
+
+	if err := osspecific.SetEcho(false); err == nil {
+
+		// Remember: defered functions are executed in LIFO order, so FlushStdin will be called before SetEcho(true)
+
+		defer osspecific.SetEcho(true) // Restore echo on exit
+		defer osspecific.FlushStdin()  // Flush stdin on exit
+	}
+
+	//-------------------------------------------------------------------------
 
 	errGrp, ctx := errgroup.WithContext(ctx)
 
@@ -75,7 +96,7 @@ func main() {
 
 	serverHTTP := &http.Server{
 
-		Addr:              ":8080",
+		Addr:              ":" + serverconfig.GetHttpPort(),
 		ReadHeaderTimeout: 3 * time.Second,
 		Handler:           http.HandlerFunc(httpHandler),
 	}
@@ -95,7 +116,7 @@ func main() {
 
 	serverHTTPS := &http.Server{
 
-		Addr:              ":8443",
+		Addr:              ":" + serverconfig.GetHttpsPort(),
 		ReadHeaderTimeout: 3 * time.Second,
 		Handler:           http.HandlerFunc(httpsHandler),
 	}
@@ -111,24 +132,21 @@ func main() {
 		return
 	}
 
-	var withHTTPS bool = false
+	//-------------------------------------------------------------------------
 
-	if withHTTPS {
+	cert, err := tls.LoadX509KeyPair("certs/cert.pem", "certs/cert-key.pem")
 
-		cert, err := tls.LoadX509KeyPair("cert.pem", "key.pem")
+	if err != nil {
 
-		if err != nil {
+		httpListener.Close()
+		httpsListener.Close()
 
-			httpListener.Close()
-			httpsListener.Close()
+		log.Error("failed to load TLS certificate", "error", err)
 
-			log.Error("failed to load TLS certificate", "error", err)
-
-			return
-		}
-
-		httpsListener = tls.NewListener(httpsListener, &tls.Config{Certificates: []tls.Certificate{cert}})
+		return
 	}
+
+	httpsListener = tls.NewListener(httpsListener, &tls.Config{Certificates: []tls.Certificate{cert}})
 
 	//-------------------------------------------------------------------------
 	// Log successful bindings
