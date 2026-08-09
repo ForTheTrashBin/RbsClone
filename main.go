@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -68,7 +70,7 @@ func main() {
 	errGrp, ctx := errgroup.WithContext(ctx)
 
 	//-------------------------------------------------------------------------
-	// http-server for automatic redirect from http to https
+	// Create a listener to listen on the http port
 	//-------------------------------------------------------------------------
 
 	serverHTTP := &http.Server{
@@ -78,9 +80,70 @@ func main() {
 		Handler:           http.HandlerFunc(httpHandler),
 	}
 
+	httpListener, err := net.Listen("tcp", serverHTTP.Addr)
+
+	if err != nil {
+
+		log.Error("failed to bind http", "error", err)
+
+		return
+	}
+
+	//-------------------------------------------------------------------------
+	// Create a linstener to listen on the https port
+	//-------------------------------------------------------------------------
+
+	serverHTTPS := &http.Server{
+
+		Addr:              ":8443",
+		ReadHeaderTimeout: 3 * time.Second,
+		Handler:           http.HandlerFunc(httpsHandler),
+	}
+
+	httpsListener, err := net.Listen("tcp", serverHTTPS.Addr)
+
+	if err != nil {
+
+		httpListener.Close()
+
+		log.Error("failed to bind https", "error", err)
+
+		return
+	}
+
+	var withHTTPS bool = false
+
+	if withHTTPS {
+
+		cert, err := tls.LoadX509KeyPair("cert.pem", "key.pem")
+
+		if err != nil {
+
+			httpListener.Close()
+			httpsListener.Close()
+
+			log.Error("failed to load TLS certificate", "error", err)
+
+			return
+		}
+
+		httpsListener = tls.NewListener(httpsListener, &tls.Config{Certificates: []tls.Certificate{cert}})
+	}
+
+	//-------------------------------------------------------------------------
+	// Log successful bindings
+	//-------------------------------------------------------------------------
+
+	log.Info("http server listening", "addr", httpListener.Addr().String())
+	log.Info("https server listening", "addr", httpsListener.Addr().String())
+
+	//-------------------------------------------------------------------------
+	// http-server for automatic redirect from http to https
+	//-------------------------------------------------------------------------
+
 	errGrp.Go(func() error {
 
-		if err := serverHTTP.ListenAndServe(); err != nil {
+		if err := serverHTTP.Serve(httpListener); err != nil {
 
 			if errors.Is(err, http.ErrServerClosed) {
 
@@ -102,19 +165,11 @@ func main() {
 	// https-server to serve https requests
 	//-------------------------------------------------------------------------
 
-	serverHTTPS := &http.Server{
-
-		Addr:              ":8443",
-		ReadHeaderTimeout: 3 * time.Second,
-		Handler:           http.HandlerFunc(httpsHandler),
-	}
-
 	errGrp.Go(func() error {
 
 		// TODO: Zertificates from "letsencrypt"
 
-		// if err := serverHTTPS.ListenAndServeTLS("cert.pem", "key.pem"); err != nil {
-		if err := serverHTTPS.ListenAndServe(); err != nil {
+		if err := serverHTTPS.Serve(httpsListener); err != nil {
 
 			if errors.Is(err, http.ErrServerClosed) {
 
