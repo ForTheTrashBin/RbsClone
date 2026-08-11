@@ -2,17 +2,17 @@
 -- +goose StatementBegin
 CREATE TABLE custodian (
 
-    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    idcustodian BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 
-    user_code VARCHAR(8) NOT NULL UNIQUE,
+    shortcode VARCHAR(8) NOT NULL UNIQUE,
 
-    CONSTRAINT chk_user_code_uppercase CHECK (user_code ~ '^[A-Z0-9ÄÖÜß]+$'),
+    CONSTRAINT chk_shortcode_uppercase CHECK (shortcode ~ '^[A-Z0-9ÄÖÜß]+$'),
 
-    last_name VARCHAR(80) NOT NULL,
-    first_name VARCHAR(80) NULL,
+    lastname VARCHAR(80) NOT NULL,
+    firstname VARCHAR(80) NULL,
 
-    status_code SMALLINT DEFAULT 0 NOT NULL,
-    score_points SMALLINT DEFAULT 0 NOT NULL
+    statuscode SMALLINT DEFAULT 0 NOT NULL,
+    scorepoints SMALLINT DEFAULT 0 NOT NULL
 );
 -- +goose StatementEnd
 

@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"crypto/tls"
+	"database/sql"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net"
 	"net/http"
@@ -13,7 +15,9 @@ import (
 	"time"
 
 	"github.com/ForTheTrashBin/RbsClone/internal/osspecific"
+	"github.com/ForTheTrashBin/RbsClone/internal/rbsdb"
 	"github.com/ForTheTrashBin/RbsClone/internal/serverconfig"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -46,6 +50,129 @@ func httpsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Secure work completed!"))
 }
 
+func helper(log *slog.Logger) {
+	/*
+		databaseHost := "skylax-dkt-01-docker"
+		databasePort := "5432"
+
+		databaseUsername := "admin%40example.com"
+		databasePassword := "eiterbatzen123"
+
+		databaseScheme := "postgres"
+		databaseName := "my_database"
+
+		dsn := url.URL{
+
+			Scheme: databaseScheme,
+			User:   url.UserPassword(databaseUsername, databasePassword),
+			Host:   fmt.Sprintf("%s:%s", databaseHost, databasePort),
+			Path:   databaseName,
+		}
+
+		q := dsn.Query()
+		q.Add("sslmode", "disable")
+
+		// dsn.RawQuery = q.Encode()
+	*/
+	dsn := "postgres://postgres:eiterbatzen123@skylax-dkt-01-docker:5432/my_database?sslmode=disable"
+
+	fmt.Println("The connectionstring:", dsn)
+
+	//-------------------------------------------------------------------------
+
+	dbPool, err := sql.Open("pgx", dsn)
+
+	if err != nil {
+
+		log.Error("Can't open database", "error", err)
+
+		return
+	}
+
+	defer dbPool.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+
+	defer cancel()
+
+	if err := dbPool.PingContext(ctx); err != nil {
+
+		log.Error("Can't ping database", "error", err)
+
+		return
+	}
+
+	//-------------------------------------------------------------------------
+	// pool tuning
+
+	dbPool.SetMaxOpenConns(25)
+	dbPool.SetMaxIdleConns(5)
+	dbPool.SetConnMaxLifetime(5 * time.Minute)
+
+	//-------------------------------------------------------------------------
+
+	baseQueries := rbsdb.New(dbPool)
+	/*
+		log.Info("Insert START")
+
+		for idx := 0; idx < 10000; idx++ {
+
+			shortcode := fmt.Sprintf("XXX%d", idx+1)
+
+			_, err = baseQueries.CreateExchange(ctx,
+				rbsdb.CreateExchangeParams{
+					Shortcode:   shortcode,
+					Lastname:    "Last",
+					Firstname:   sql.NullString{String: "First", Valid: true},
+					Statuscode:  88,
+					Scorepoints: 99,
+				})
+
+			if err != nil {
+
+				log.Error("CreateExchange", "error", err)
+
+				return
+			}
+		}
+
+		log.Info("Insert END")
+	*/
+
+	newExchange, err := baseQueries.GetExchangeByShortcode(ctx, "XXX23")
+
+	if err != nil {
+
+		if errors.Is(err, sql.ErrNoRows) {
+
+			log.Info("GetExchange: No records")
+		} else {
+
+			log.Error("GetExchange", "error", err)
+
+			return
+		}
+	} else {
+
+		log.Info("DB_Record", "newExchange", newExchange)
+	}
+	/*
+	   exchanges, err := baseQueries.ListExchanges(ctx)
+
+	   if err != nil {
+
+	   		log.Error("ListExchanges", "error", err)
+
+	   		return
+	   	}
+
+	   for _, ex := range exchanges {
+
+	   		fmt.Println("Ex: ", ex)
+	   	}
+	*/
+}
+
 func main() {
 
 	//-------------------------------------------------------------------------
@@ -53,6 +180,8 @@ func main() {
 	//-------------------------------------------------------------------------
 
 	log := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{}))
+
+	helper(log)
 
 	//-------------------------------------------------------------------------
 	// Create a context that is canceled (ctx.Done()) when an interrupt signal is received
@@ -96,9 +225,12 @@ func main() {
 
 	serverHTTP := &http.Server{
 
-		Addr:              ":" + serverconfig.GetHttpPort(),
-		ReadHeaderTimeout: 3 * time.Second,
 		Handler:           http.HandlerFunc(httpHandler),
+		Addr:              ":" + serverconfig.GetHttpPort(),
+		ReadTimeout:       3 * time.Second,
+		ReadHeaderTimeout: 3 * time.Second,
+		WriteTimeout:      3 * time.Second,
+		IdleTimeout:       3 * time.Second,
 	}
 
 	httpListener, err := net.Listen("tcp", serverHTTP.Addr)
@@ -184,8 +316,6 @@ func main() {
 	//-------------------------------------------------------------------------
 
 	errGrp.Go(func() error {
-
-		// TODO: Zertificates from "letsencrypt"
 
 		if err := serverHTTPS.Serve(httpsListener); err != nil {
 

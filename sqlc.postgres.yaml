@@ -1,0 +1,12 @@
+version: "2"
+sql:
+  - name: "app_postgres"
+    engine: "postgresql"
+    schema: "db/migrations/postgres"
+    queries: "db/queries"
+    gen:
+      go:
+        package: "rbsdb"
+        out: "internal/rbsdb"
+        sql_package: "database/sql"
+        
