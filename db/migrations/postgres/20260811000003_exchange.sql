@@ -21,4 +21,3 @@ CREATE TABLE exchange (
 -- +goose StatementBegin
 DROP TABLE exchange
 -- +goose StatementEnd
-
