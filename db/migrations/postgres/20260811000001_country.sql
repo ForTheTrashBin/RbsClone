@@ -10,11 +10,11 @@ CREATE TABLE country (
 
     name VARCHAR(30) NOT NULL,
     
-    flags SMALLINT DEFAULT 0 NULL,
+    flags SMALLINT DEFAULT 0 NOT NULL,
     
     ibanlength SMALLINT DEFAULT 22 NULL,
 
-    risktype SMALLINT DEFAULT 0 NULL
+    risktype SMALLINT DEFAULT 0 NOT NULL
 );
 -- +goose StatementEnd
 
