@@ -12,7 +12,7 @@ INSERT INTO COUNTRY (shortcode, name) VALUES ($1, $2) RETURNING idCountry;
 
 -- ----------------------------------------------------------------------------
 
--- name: ListCountries :many
+-- name: GetCountries :many
 
 SELECT * FROM COUNTRY ORDER BY shortcode;
 
@@ -32,7 +32,7 @@ UPDATE COUNTRY SET shortcode = $2, name = $3, flags = $4, ibanlength = $5, riskt
 
 -- ----------------------------------------------------------------------------
 
--- name: DeleteCountryByIdCountry :exec
+-- name: DeleteCountryById :exec
 
 DELETE FROM COUNTRY WHERE idcountry = $1;
 
@@ -54,7 +54,7 @@ INSERT INTO CUSTODIAN (shortcode, name, idcountry) VALUES ($1, $2, $3) RETURNING
 
 -- ----------------------------------------------------------------------------
 
--- name: ListCustodians :many
+-- name: GetCustodians :many
 
 SELECT * FROM CUSTODIAN ORDER BY shortcode;
 
@@ -74,7 +74,7 @@ UPDATE CUSTODIAN SET shortcode = $2, name = $3, flags = $4, idcountry = $5, depo
 
 -- ----------------------------------------------------------------------------
 
--- name: DeleteCustodianByIdCustodian :exec
+-- name: DeleteCustodianById :exec
 
 DELETE FROM CUSTODIAN WHERE idcustodian = $1;
 
@@ -96,7 +96,7 @@ INSERT INTO EXCHANGE (shortcode, lastname) VALUES ($1, $2) RETURNING idExchange;
 
 -- ----------------------------------------------------------------------------
 
--- name: ListExchanges :many
+-- name: GetExchanges :many
 
 SELECT * FROM EXCHANGE ORDER BY shortcode;
 
@@ -116,7 +116,7 @@ UPDATE EXCHANGE SET shortcode = $2, lastname = $3, firstname = $4, statuscode = 
 
 -- ----------------------------------------------------------------------------
 
--- name: DeleteExchangeByIdExchange :exec
+-- name: DeleteExchangeById :exec
 
 DELETE FROM EXCHANGE WHERE idexchange = $1;
 
@@ -138,11 +138,11 @@ INSERT INTO CUSTODIAN2EXCHANGE (idexchange, idcustodian, value02) VALUES ($1, $2
 
 -- ----------------------------------------------------------------------------
 
--- name: ListCustodian2ExchangeByExchange :many
+-- name: GetCustodian2ExchangeByExchange :many
 
 SELECT * FROM CUSTODIAN2EXCHANGE WHERE idexchange = $1 ORDER BY idcustodian;
 
--- name: ListCustodian2ExchangeByCustodian :many
+-- name: GetCustodian2ExchangeByCustodian :many
 
 SELECT * FROM CUSTODIAN2EXCHANGE WHERE idcustodian = $1 ORDER BY idexchange;
 
@@ -158,6 +158,6 @@ UPDATE CUSTODIAN2EXCHANGE SET value01 = $2, value02 = $3 WHERE idexchange = $1 A
 
 -- ----------------------------------------------------------------------------
 
--- name: DeleteExchangeByIdExchangeAndIdCustodian :exec
+-- name: DeleteCustodian2Exchange :exec
 
 DELETE FROM CUSTODIAN2EXCHANGE WHERE idexchange = $1 AND idcustodian = $2;
