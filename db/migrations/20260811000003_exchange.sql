@@ -2,17 +2,17 @@
 -- +goose StatementBegin
 CREATE TABLE exchange (
 
-    idexchange BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    idexchange UUID PRIMARY KEY DEFAULT uuidv7(),
 
     shortcode VARCHAR(8) NOT NULL UNIQUE,
-
-    CONSTRAINT chk_shortcode_uppercase CHECK (shortcode ~ '^[A-Z0-9ÄÖÜß]+$'),
 
     lastname VARCHAR(80) NOT NULL,
     firstname VARCHAR(80) NULL,
 
     statuscode SMALLINT DEFAULT 0 NOT NULL,
-    scorepoints SMALLINT DEFAULT 0 NOT NULL
+    scorepoints SMALLINT DEFAULT 0 NOT NULL,
+
+    CONSTRAINT chk_shortcode_uppercase CHECK (shortcode ~ '^[A-Z0-9ÄÖÜß]+$')
 );
 -- +goose StatementEnd
 

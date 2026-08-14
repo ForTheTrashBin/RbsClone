@@ -2,11 +2,9 @@
 -- +goose StatementBegin
 CREATE TABLE country (
 
-    idcountry BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    idcountry UUID PRIMARY KEY DEFAULT uuidv7(),
 
     shortcode VARCHAR(2) NOT NULL UNIQUE,
-
-    CONSTRAINT chk_shortcode_uppercase CHECK (shortcode ~ '^[A-Z0-9ÄÖÜß]+$'),
 
     name VARCHAR(30) NOT NULL,
     
@@ -14,7 +12,9 @@ CREATE TABLE country (
     
     ibanlength SMALLINT DEFAULT 22 NULL,
 
-    risktype SMALLINT DEFAULT 0 NOT NULL
+    risktype SMALLINT DEFAULT 0 NOT NULL,
+
+    CONSTRAINT chk_shortcode_uppercase CHECK (shortcode ~ '^[A-Z0-9ÄÖÜß]+$')
 );
 -- +goose StatementEnd
 
