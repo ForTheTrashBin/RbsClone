@@ -30,6 +30,9 @@ go.work.sum
 # Secrets
 certs/
 
+# Generated
+internal/rbsdb
+
 # Editor/IDE
 # .idea/
 # .vscode/

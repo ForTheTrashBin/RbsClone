@@ -1,12 +1,24 @@
 version: "2"
 sql:
-  - name: "app_postgres"
+  - name: "postgres"
     engine: "postgresql"
-    schema: "db/migrations/postgres"
+    schema: "db/migrations"
     queries: "db/queries"
     gen:
       go:
         package: "rbsdb"
         out: "internal/rbsdb"
-        sql_package: "database/sql"
+        sql_package: "pgx/v5"
+        overrides:
+          - db_type: "uuid"
+            go_type:
+              import: "github.com/google/uuid"
+              type: "UUID"
+          - db_type: "uuid"
+            go_type:
+              import: "github.com/google/uuid"
+              type: "UUID"
+              pointer: true
+
+
         

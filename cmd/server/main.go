@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"crypto/tls"
-	"database/sql"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -11,177 +10,172 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
+	"github.com/danielgtaylor/huma/v2"
+	"github.com/danielgtaylor/huma/v2/adapters/humago"
+	"github.com/jackc/pgx/v5/pgxpool"
+
 	"github.com/ForTheTrashBin/RbsClone/internal/osspecific"
-	"github.com/ForTheTrashBin/RbsClone/internal/rbsdb"
+	"github.com/ForTheTrashBin/RbsClone/internal/rest"
 	"github.com/ForTheTrashBin/RbsClone/internal/serverconfig"
-	_ "github.com/jackc/pgx/v5/stdlib"
 	"golang.org/x/sync/errgroup"
 )
 
-func httpHandler(w http.ResponseWriter, r *http.Request) {
+//-----------------------------------------------------------------------------
+// Handler and wrapper for http messages
+//-----------------------------------------------------------------------------
 
-	//-------------------------------------------------------------------------
-	// Striktes HTTP -> HTTPS Redirect
-	//-------------------------------------------------------------------------
+type HttpHandlerWrapper struct {
+	config serverconfig.Config
+}
 
-	host := r.Host
+func NewHttpHandlerWrapper(config serverconfig.Config) HttpHandlerWrapper {
 
-	if h, p, err := net.SplitHostPort(r.Host); err == nil {
+	return HttpHandlerWrapper{
 
-		if p == serverconfig.GetHttpPort() {
+		config: config,
+	}
+}
 
-			host = net.JoinHostPort(h, serverconfig.GetHttpsPort())
+//-----------------------------------------------------------------------------
+
+func (hhw HttpHandlerWrapper) httpHandler(w http.ResponseWriter, r *http.Request) {
+
+	newHost := r.Host
+
+	httpPort := strconv.Itoa(int(hhw.config.GetHTTPPort()))
+	httpsPort := strconv.Itoa(int(hhw.config.GetHTTPSPort()))
+
+	if host, port, err := net.SplitHostPort(r.Host); err == nil {
+
+		if port == httpPort {
+
+			newHost = net.JoinHostPort(host, httpsPort)
 		}
 	} else {
 
-		host = net.JoinHostPort(r.Host, serverconfig.GetHttpsPort())
+		newHost = net.JoinHostPort(r.Host, httpsPort)
 	}
 
-	target := "https://" + host + r.URL.RequestURI()
+	target := "https://" + newHost + r.URL.RequestURI()
 
-	http.Redirect(w, r, target, http.StatusTemporaryRedirect) // could be http.StatusMovedPermanently too
+	http.Redirect(w, r, target, http.StatusMovedPermanently) // could be http.StatusTemporaryRedirect too
 }
 
-func httpsHandler(w http.ResponseWriter, r *http.Request) {
+//-----------------------------------------------------------------------------
+// The main entry-point of this app
+//-----------------------------------------------------------------------------
 
-	w.Write([]byte("Secure work completed!"))
-}
+func main() {
 
-func helper(log *slog.Logger) {
-	/*
-		databaseHost := "skylax-dkt-01-docker"
-		databasePort := "5432"
-
-		databaseUsername := "admin%40example.com"
-		databasePassword := "eiterbatzen123"
-
-		databaseScheme := "postgres"
-		databaseName := "my_database"
-
-		dsn := url.URL{
-
-			Scheme: databaseScheme,
-			User:   url.UserPassword(databaseUsername, databasePassword),
-			Host:   fmt.Sprintf("%s:%s", databaseHost, databasePort),
-			Path:   databaseName,
-		}
-
-		q := dsn.Query()
-		q.Add("sslmode", "disable")
-
-		// dsn.RawQuery = q.Encode()
-	*/
-	dsn := "postgres://postgres:eiterbatzen123@skylax-dkt-01-docker:5432/my_database?sslmode=disable"
-
-	fmt.Println("The connectionstring:", dsn)
+	var config serverconfig.Config
 
 	//-------------------------------------------------------------------------
+	// Read content of .env-file into the 'local' environment of this proccess
+	//-------------------------------------------------------------------------
 
-	dbPool, err := sql.Open("pgx", dsn)
+	if err := config.InitGoDotEnv(); err != nil {
+
+		panic(fmt.Errorf("Error from 'godotenv': %w", err))
+	}
+
+	//-------------------------------------------------------------------------
+	// Parse the content of the 'local' environmet into the Config-struct
+	//-------------------------------------------------------------------------
+
+	if err := config.InitCaarlos0(); err != nil {
+
+		panic(fmt.Errorf("Error from 'env': %w", err))
+	}
+
+	//-------------------------------------------------------------------------
+	// Create a new structured logger that writes JSON to stdout.
+	//-------------------------------------------------------------------------
+
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: config.LogLevel})) // Level: parseLogLevel(config.LogLevel)}))
+
+	logger.Info("Application config", "DB_USER", config.DB.User)
+	logger.Info("Application config", "DB_PASSWORD", config.DB.Password)
+	logger.Info("Application config", "DB_HOST", config.DB.Host)
+	logger.Info("Application config", "DB_PORT", config.DB.Port)
+	logger.Info("Application config", "DB_DATABASE", config.DB.Database)
+
+	logger.Info("Application config", "RT_HTTPPORT", config.GetHTTPPort())
+	logger.Info("Application config", "RT_HTTPSPORT", config.GetHTTPSPort())
+
+	//-------------------------------------------------------------------------
+	// Connect to database
+	//-------------------------------------------------------------------------
+
+	// Create a pgxpool.Config for manual configuration
+
+	pgxconfig, err := pgxpool.ParseConfig("")
 
 	if err != nil {
 
-		log.Error("Can't open database", "error", err)
+		logger.Error("Can't parse postgres-config", "error", err)
+
+		return
+	}
+
+	// Create a pgxpool.Config for manual configuration
+
+	pgxconfig.ConnConfig.User = config.DB.User
+	pgxconfig.ConnConfig.Password = config.DB.Password
+	pgxconfig.ConnConfig.Host = config.DB.Host
+	pgxconfig.ConnConfig.Port = config.DB.Port
+	pgxconfig.ConnConfig.Database = config.DB.Database
+
+	pgxconfig.ConnConfig.ConnectTimeout = 5 * time.Second
+
+	// Connection pool tuning
+
+	pgxconfig.MinConns = 5
+	pgxconfig.MaxConns = 25
+	pgxconfig.MaxConnLifetime = 1 * time.Hour
+	pgxconfig.MaxConnIdleTime = 15 * time.Minute
+	pgxconfig.HealthCheckPeriod = 1 * time.Minute
+
+	//-------------------------------------------------------------------------
+	// Connect to postgres database
+	//-------------------------------------------------------------------------
+
+	ctxDBConnect, cancelDBConnectTimeout := context.WithTimeout(context.Background(), 30*time.Second)
+
+	defer cancelDBConnectTimeout()
+
+	//-------------------------------------------------------------------------
+
+	dbPool, err := pgxpool.NewWithConfig(ctxDBConnect, pgxconfig)
+
+	if err != nil {
+
+		logger.Error("Can't open database", "error", err)
 
 		return
 	}
 
 	defer dbPool.Close()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	//-------------------------------------------------------------------------
 
-	defer cancel()
+	if err := dbPool.Ping(ctxDBConnect); err != nil {
 
-	if err := dbPool.PingContext(ctx); err != nil {
-
-		log.Error("Can't ping database", "error", err)
+		logger.Error("Can't ping database", "error", err)
 
 		return
 	}
 
 	//-------------------------------------------------------------------------
-	// pool tuning
 
-	dbPool.SetMaxOpenConns(25)
-	dbPool.SetMaxIdleConns(5)
-	dbPool.SetConnMaxLifetime(5 * time.Minute)
+	cancelDBConnectTimeout()
 
 	//-------------------------------------------------------------------------
 
-	baseQueries := rbsdb.New(dbPool)
-	/*
-		log.Info("Insert START")
-
-		for idx := 0; idx < 10000; idx++ {
-
-			shortcode := fmt.Sprintf("XXX%d", idx+1)
-
-			_, err = baseQueries.CreateExchange(ctx,
-				rbsdb.CreateExchangeParams{
-					Shortcode:   shortcode,
-					Lastname:    "Last",
-					Firstname:   sql.NullString{String: "First", Valid: true},
-					Statuscode:  88,
-					Scorepoints: 99,
-				})
-
-			if err != nil {
-
-				log.Error("CreateExchange", "error", err)
-
-				return
-			}
-		}
-
-		log.Info("Insert END")
-	*/
-
-	newExchange, err := baseQueries.GetExchangeByShortcode(ctx, "XXX23")
-
-	if err != nil {
-
-		if errors.Is(err, sql.ErrNoRows) {
-
-			log.Info("GetExchange: No records")
-		} else {
-
-			log.Error("GetExchange", "error", err)
-
-			return
-		}
-	} else {
-
-		log.Info("DB_Record", "newExchange", newExchange)
-	}
-	/*
-	   exchanges, err := baseQueries.ListExchanges(ctx)
-
-	   if err != nil {
-
-	   		log.Error("ListExchanges", "error", err)
-
-	   		return
-	   	}
-
-	   for _, ex := range exchanges {
-
-	   		fmt.Println("Ex: ", ex)
-	   	}
-	*/
-}
-
-func main() {
-
-	//-------------------------------------------------------------------------
-	// Create a new structured logger that writes JSON to stdout.
-	//-------------------------------------------------------------------------
-
-	log := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{}))
-
-	helper(log)
+	// tools.InitializeCountry(logger, dbPool)
 
 	//-------------------------------------------------------------------------
 	// Create a context that is canceled (ctx.Done()) when an interrupt signal is received
@@ -223,10 +217,12 @@ func main() {
 	// Create a listener to listen on the http port
 	//-------------------------------------------------------------------------
 
+	httpHandlerWrapper := NewHttpHandlerWrapper(config)
+
 	serverHTTP := &http.Server{
 
-		Handler:           http.HandlerFunc(httpHandler),
-		Addr:              ":" + serverconfig.GetHttpPort(),
+		Handler:           http.HandlerFunc(httpHandlerWrapper.httpHandler),
+		Addr:              ":" + strconv.Itoa(int(config.GetHTTPPort())),
 		ReadTimeout:       3 * time.Second,
 		ReadHeaderTimeout: 3 * time.Second,
 		WriteTimeout:      3 * time.Second,
@@ -237,20 +233,35 @@ func main() {
 
 	if err != nil {
 
-		log.Error("failed to bind http", "error", err)
+		logger.Error("failed to bind http", "error", err)
 
 		return
 	}
 
 	//-------------------------------------------------------------------------
-	// Create a linstener to listen on the https port
+	// Create a listener to listen on the https port
 	//-------------------------------------------------------------------------
+
+	humaConfig := huma.DefaultConfig("API for Rbs", "0.1.0")
+
+	humaConfig.CreateHooks = nil
+
+	//-------------------------------------------------------------------------
+
+	router := http.NewServeMux()
+
+	api := humago.New(router, humaConfig)
+
+	rest.RegisterAllRoutes(logger, dbPool, api)
 
 	serverHTTPS := &http.Server{
 
-		Addr:              ":" + serverconfig.GetHttpsPort(),
+		Handler:           router, // myhandler, // http.HandlerFunc(myhandler), // http.HandlerFunc(httpsHandler),
+		Addr:              ":" + strconv.Itoa(int(config.GetHTTPSPort())),
+		ReadTimeout:       3 * time.Second,
 		ReadHeaderTimeout: 3 * time.Second,
-		Handler:           http.HandlerFunc(httpsHandler),
+		WriteTimeout:      3 * time.Second,
+		IdleTimeout:       3 * time.Second,
 	}
 
 	httpsListener, err := net.Listen("tcp", serverHTTPS.Addr)
@@ -259,7 +270,7 @@ func main() {
 
 		httpListener.Close()
 
-		log.Error("failed to bind https", "error", err)
+		logger.Error("failed to bind https", "error", err)
 
 		return
 	}
@@ -273,7 +284,7 @@ func main() {
 		httpListener.Close()
 		httpsListener.Close()
 
-		log.Error("failed to load TLS certificate", "error", err)
+		logger.Error("failed to load TLS certificate", "error", err)
 
 		return
 	}
@@ -284,8 +295,8 @@ func main() {
 	// Log successful bindings
 	//-------------------------------------------------------------------------
 
-	log.Info("http server listening", "addr", httpListener.Addr().String())
-	log.Info("https server listening", "addr", httpsListener.Addr().String())
+	logger.Info("http server listening", "addr", httpListener.Addr().String())
+	logger.Info("https server listening", "addr", httpsListener.Addr().String())
 
 	//-------------------------------------------------------------------------
 	// http-server for automatic redirect from http to https
@@ -297,12 +308,12 @@ func main() {
 
 			if errors.Is(err, http.ErrServerClosed) {
 
-				log.Info("http-server closed (gracefully)")
+				logger.Info("http-server closed (gracefully)")
 
 				return nil
 			} else {
 
-				log.Error("http server returned error", "error", err)
+				logger.Error("http server returned error", "error", err)
 
 				return err
 			}
@@ -321,12 +332,12 @@ func main() {
 
 			if errors.Is(err, http.ErrServerClosed) {
 
-				log.Info("https-server closed (gracefully)")
+				logger.Info("https-server closed (gracefully)")
 
 				return nil
 			} else {
 
-				log.Error("https server returned error", "error", err)
+				logger.Error("https server returned error", "error", err)
 
 				return err
 			}
@@ -351,7 +362,7 @@ func main() {
 
 		<-ctx.Done()
 
-		log.Info("Shutdown signal received or error detected. Servers are shutting down...")
+		logger.Info("Shutdown signal received or error detected. Servers are shutting down...")
 
 		//-------------------------------------------------------------------------
 		// Set a separate timeout for shutdown (e.g., 10 seconds)
@@ -375,9 +386,9 @@ func main() {
 
 	if err := errGrp.Wait(); err != nil {
 
-		log.Error("Server terminated with an error", "error", err)
+		logger.Error("Server terminated with an error", "error", err)
 	} else {
 
-		log.Info("Server shut down normally")
+		logger.Info("Server shut down normally")
 	}
 }

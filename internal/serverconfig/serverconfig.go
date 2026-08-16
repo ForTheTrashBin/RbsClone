@@ -1,56 +1,65 @@
 package serverconfig
 
 import (
-	"os"
-	"sync"
+	"log/slog"
+
+	"github.com/caarlos0/env/v11"
+	"github.com/joho/godotenv"
 )
 
 //-----------------------------------------------------------------------------
-// Get the http-port from the environmet
+// Configuration for the postgres database
 //-----------------------------------------------------------------------------
 
-var (
-	httpPort     string
-	httpPortOnce sync.Once
-)
-
-func GetHttpPort() string {
-
-	httpPortOnce.Do(func() {
-
-		if value := os.Getenv(httpPortKey); value != "" {
-
-			httpPort = value
-		} else {
-
-			httpPort = httpPortDefault
-		}
-	})
-
-	return httpPort
+type DBConfig struct {
+	User     string `env:"USER,notEmpty"`          // The User's name
+	Password string `env:"PASSWORD,notEmpty"`      // The Password of the user
+	Host     string `env:"HOST,notEmpty"`          // The database host
+	Port     uint16 `env:"PORT" envDefault:"5432"` // The port the database is running on (defaults to 5432)
+	Database string `env:"DATABASE,notEmpty"`      // The name of the database to connect to
 }
 
 //-----------------------------------------------------------------------------
-// Get the https-port from the environmet
+// Configuration for tzhe routers and http(s) servers
 //-----------------------------------------------------------------------------
 
-var (
-	httpsPort     string
-	httpsPortOnce sync.Once
-)
+type RTConfig struct {
+	HTTPPort  uint16 `env:"HTTP_PORT" envDefault:"8080"`
+	HTTPSPort uint16 `env:"HTTPS_PORT" envDefault:"8443"`
+}
 
-func GetHttpsPort() string {
+//-----------------------------------------------------------------------------
 
-	httpsPortOnce.Do(func() {
+type Config struct {
+	DB       DBConfig   `envPrefix:"DB_"`
+	RT       RTConfig   `envPrefix:"RT_"`
+	LogLevel slog.Level `env:"LOGLEVEL" envDefault:"info"`
+}
 
-		if value := os.Getenv(httpsPortKey); value != "" {
+//-----------------------------------------------------------------------------
+// Administrativ functions
+//-----------------------------------------------------------------------------
 
-			httpsPort = value
-		} else {
+func (cfg *Config) InitGoDotEnv() error {
 
-			httpsPort = httpsPortDefault
-		}
-	})
+	return godotenv.Load()
+}
 
-	return httpsPort
+func (cfg *Config) InitCaarlos0() error {
+
+	return env.Parse(cfg)
+}
+
+//-----------------------------------------------------------------------------
+// Access functions
+//-----------------------------------------------------------------------------
+
+func (cfg Config) GetHTTPPort() uint16 {
+
+	return cfg.RT.HTTPPort
+}
+
+func (cfg Config) GetHTTPSPort() uint16 {
+
+	return cfg.RT.HTTPSPort
 }

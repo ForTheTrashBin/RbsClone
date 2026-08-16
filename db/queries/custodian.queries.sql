@@ -6,10 +6,6 @@
 
 INSERT INTO CUSTODIAN (shortcode, name, flags, idcountry, depotno) VALUES ($1, $2, $3, $4, $5) RETURNING idCustodian;
 
--- name: InsertCustodianMin :one
-
-INSERT INTO CUSTODIAN (shortcode, name, idcountry) VALUES ($1, $2, $3) RETURNING idCustodian;
-
 -- ----------------------------------------------------------------------------
 
 -- name: GetCustodians :many
@@ -26,16 +22,12 @@ SELECT * FROM CUSTODIAN WHERE shortcode = $1 LIMIT 1;
 
 -- ----------------------------------------------------------------------------
 
--- name: UpdateCustodian :exec
+-- name: UpdateCustodian :execresult
 
 UPDATE CUSTODIAN SET shortcode = $2, name = $3, flags = $4, idcountry = $5, depotno = $6 WHERE idcustodian = $1;
 
 -- ----------------------------------------------------------------------------
 
--- name: DeleteCustodianById :exec
+-- name: DeleteCustodian :execresult
 
 DELETE FROM CUSTODIAN WHERE idcustodian = $1;
-
--- name: DeleteCustodianByShortcode :exec
-
-DELETE FROM CUSTODIAN WHERE shortcode = $1;

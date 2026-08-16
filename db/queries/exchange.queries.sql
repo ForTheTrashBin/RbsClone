@@ -6,10 +6,6 @@
 
 INSERT INTO EXCHANGE (shortcode, lastname, firstname, statuscode, scorepoints) VALUES ($1, $2, $3, $4, $5) RETURNING idExchange;
 
--- name: InsertExchangeMin :one
-
-INSERT INTO EXCHANGE (shortcode, lastname) VALUES ($1, $2) RETURNING idExchange;
-
 -- ----------------------------------------------------------------------------
 
 -- name: GetExchanges :many
@@ -26,16 +22,12 @@ SELECT * FROM EXCHANGE WHERE shortcode = $1 LIMIT 1;
 
 -- ----------------------------------------------------------------------------
 
--- name: UpdateExchange :exec
+-- name: UpdateExchange :execresult
 
 UPDATE EXCHANGE SET shortcode = $2, lastname = $3, firstname = $4, statuscode = $5, scorepoints = $6 WHERE idexchange = $1;
 
 -- ----------------------------------------------------------------------------
 
--- name: DeleteExchangeById :exec
+-- name: DeleteExchange :execresult
 
 DELETE FROM EXCHANGE WHERE idexchange = $1;
-
--- name: DeleteExchangeByShortcode :exec
-
-DELETE FROM EXCHANGE WHERE shortcode = $1;

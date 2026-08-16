@@ -1,0 +1,200 @@
+ISO_2;ISO_3;Land_DE;Waehrung;IBAN_Laenge
+AF;AFG;Afghanistan;AFN;0
+EG;EGY;Ägypten;EGP;29
+AL;ALB;Albanien;ALL;28
+DZ;DZA;Algerien;DZD;0
+AD;AND;Andorra;EUR;24
+AO;AGO;Angola;AOA;0
+AI;AIA;Anguilla;XCD;0
+AG;ATG;Antigua und Barbuda;XCD;0
+GQ;GNQ;Äquatorialguinea;XAF;0
+AR;ARG;Argentinien;ARS;0
+AM;ARM;Armenien;AMD;0
+AW;ABW;Aruba;AWG;0
+AZ;AZE;Aserbaidschan;AZN;28
+ET;ETH;Äthiopien;ETB;0
+AU;AUS;Australien;AUD;0
+BS;BHS;Bahamas;BSD;0
+BH;BHR;Bahrain;BHD;22
+BD;BGD;Bangladesch;BDT;0
+BB;BRB;Barbados;BBD;0
+BE;BEL;Belgien;EUR;16
+BZ;BLZ;Belize;BZD;0
+BJ;BEN;Benin;XOF;0
+BM;BMU;Bermuda;BMD;0
+BT;BTN;Bhutan;BTN;0
+BO;BOL;Bolivien;BOB;0
+BA;BIH;Bosnien und Herzegowina;BAM;20
+BW;BWA;Botswana;BWP;0
+BR;BRA;Brasilien;BRL;29
+BN;BRN;Brunei Darussalam;BND;0
+BG;BGR;Bulgarien;BGN;22
+BF;BFA;Burkina Faso;XOF;0
+BI;BDI;Burundi;BIF;27
+CL;CHL;Chile;CLP;0
+CN;CHN;China;CNY;0
+CR;CRI;Costa Rica;CRC;22
+DK;DNK;Dänemark;DKK;18
+DE;DEU;Deutschland;EUR;22
+DJ;DJI;Dschibuti;DJF;27
+DM;DMA;Dominica;XCD;0
+DO;DOM;Dominikanische Republik;DOP;28
+EC;ECU;Ecuador;USD;0
+SV;SLV;El Salvador;USD;28
+CI;CIV;Elfenbeinküste;XOF;0
+ER;ERI;Eritrea;ERN;0
+EE;EST;Estland;EUR;20
+SZ;SWZ;Eswatini;SZL;0
+FJ;FJI;Fidschi;FJD;0
+FI;FIN;Finnland;EUR;18
+FR;FRA;Frankreich;EUR;27
+GA;GAB;Gabun;XAF;0
+GM;GMB;Gambia;GMD;0
+GE;GEO;Georgien;GEL;22
+GH;GHA;Ghana;GHS;0
+GD;GRD;Grenada;XCD;0
+GR;GRC;Griechenland;EUR;27
+GT;GTM;Guatemala;GTQ;28
+GN;GIN;Guinea;GNF;0
+GW;GNB;Guinea-Bissau;XOF;0
+GY;GUY;Guyana;GYD;0
+HT;HTI;Haiti;HTG;0
+HN;HND;Honduras;HNL;28
+IN;IND;Indien;INR;0
+ID;IDN;Indonesien;IDR;0
+IQ;IRQ;Irak;IQD;23
+IR;IRN;Iran;IRR;0
+IE;IRL;Irland;EUR;22
+IS;ISL;Island;ISK;26
+IL;ISR;Israel;ILS;23
+IT;ITA;Italien;EUR;27
+JM;JAM;Jamaika;JMD;0
+JP;JPN;Japan;JPY;0
+YE;YEM;Jemen;YER;0
+JO;JOR;Jordanien;JOD;30
+KH;KHM;Kambodscha;KHR;0
+CM;CMR;Kamerun;XAF;0
+CA;CAN;Kanada;CAD;0
+CV;CPV;Kap Verde;CVE;0
+KZ;KAZ;Kasachstan;KZT;20
+QA;QAT;Katar;QAR;29
+KE;KEN;Kenia;KES;0
+KG;KGZ;Kirgisistan;KGS;0
+KI;KIR;Kiribati;AUD;0
+CO;COL;Kolumbien;COP;0
+KM;COM;Komoren;KMF;0
+CG;COG;Kongo (Republik);XAF;0
+CD;COD;Kongo (Demokr. Rep.);CDF;0
+KP;PRK;Nordkorea;KPW;0
+KR;KOR;Südkorea;KRW;0
+XK;XKX;Kosovo;EUR;20
+HR;HRV;Kroatien;EUR;21
+CU;CUB;Kuba;CUP;0
+KW;KWT;Kuwait;KWD;30
+LA;LAO;Laos;LAK;0
+LS;LSO;Lesotho;LSL;0
+LV;LVA;Lettland;EUR;21
+LB;LBN;Libanon;LBP;28
+LR;LBR;Liberia;LRD;0
+LY;LBY;Libyen;LYD;25
+LI;LIE;Liechtenstein;CHF;21
+LT;LTU;Litauen;EUR;20
+LU;LUX;Luxemburg;EUR;20
+MG;MDG;Madagaskar;MGA;0
+MW;MWI;Malawi;MWK;0
+MY;MYS;Malaysia;MYR;0
+MV;MDV;Malediven;MVR;0
+ML;MLI;Mali;XOF;0
+MT;MLT;Malta;EUR;31
+MA;MAR;Marokko;MAD;0
+MH;MHL;Marshallinseln;USD;0
+MR;MRT;Mauretanien;MRU;27
+MU;MUS;Mauritius;MUR;30
+MX;MEX;Mexiko;MXN;0
+FM;FSM;Mikronesien;USD;0
+MD;MDA;Moldau;MDL;24
+MC;MCO;Monaco;EUR;27
+MN;MNG;Mongolei;MNT;20
+ME;MNE;Montenegro;EUR;22
+MZ;MOZ;Mosambik;MZN;0
+MM;MMR;Myanmar;MMK;0
+NA;NAM;Namibia;NAD;0
+NR;NRU;Nauru;AUD;0
+NP;NPL;Nepal;NPR;0
+NZ;NZL;Neuseeland;NZD;0
+NI;NIC;Nicaragua;NIO;28
+NL;NLD;Niederlande;EUR;18
+NE;NER;Niger;XOF;0
+NG;NGA;Nigeria;NGN;0
+MK;MKD;Nordmazedonien;MKD;19
+NO;NOR;Norwegen;NOK;15
+OM;OMN;Oman;OMR;23
+AT;AUT;Österreich;EUR;20
+PK;PAK;Pakistan;PKR;24
+PW;PLW;Palau;USD;0
+PS;PSE;Palästina;ILS;29
+PA;PAN;Panama;PAB;0
+PG;PNG;Papua-Neuguinea;PGK;0
+PY;PRY;Paraguay;PYG;0
+PE;PER;Peru;PEN;0
+PH;PHL;Philippinen;PHP;0
+PL;POL;Polen;PLN;28
+PT;PRT;Portugal;EUR;25
+RW;RWA;Ruanda;RWF;0
+RO;ROU;Rumänien;RON;24
+RU;RUS;Russland;RUB;33
+SB;SLB;Salomonen;SBD;0
+ZM;ZMB;Sambia;ZMW;0
+WS;WSM;Samoa;WST;0
+SM;SMR;San Marino;EUR;27
+ST;STP;São Tomé und Príncipe;STN;25
+SA;SAU;Saudi-Arabien;SAR;24
+SE;SWE;Schweden;SEK;24
+CH;CHE;Schweiz;CHF;21
+SN;SEN;Senegal;XOF;0
+RS;SRB;Serbien;RSD;22
+SC;SYC;Seychellen;SCR;31
+SL;SLE;Sierra Leone;SLE;0
+SG;SGP;Singapur;SGD;0
+SK;SVK;Slowakei;EUR;24
+SI;SVN;Slowenien;EUR;19
+SO;SOM;Somalia;SOS;23
+ES;ESP;Spanien;EUR;24
+LK;LKA;Sri Lanka;LKR;0
+KN;KNA;St. Kitts und Nevis;XCD;0
+LC;LCA;St. Lucia;XCD;32
+VC;VCT;St. Vincent und die Grenadinen;XCD;0
+ZA;ZAF;Südafrika;ZAR;0
+SD;SDN;Sudan;SDG;18
+SS;SSD;Südsudan;SSP;0
+SR;SUR;Suriname;SRD;0
+SY;SYR;Syrien;SYP;0
+TJ;TJK;Tadschikistan;TJS;0
+TW;TWN;Taiwan;TWD;0
+TZ;TZA;Tansania;TZS;0
+TH;THA;Thailand;THB;0
+TL;TLS;Timor-Leste;USD;23
+TG;TGO;Togo;XOF;0
+TO;TON;Tonga;TOP;0
+TT;TTO;Trinidad und Tobago;TTD;0
+TD;TCD;Tschad;XAF;0
+CZ;CZE;Tschechien;CZK;24
+TN;TUN;Tunesien;TND;24
+TR;TUR;Türkei;TRY;26
+TM;TKM;Turkmenistan;TMT;0
+TV;TUV;Tuvalu;AUD;0
+UG;UGA;Uganda;UGX;0
+UA;UKR;Ukraine;UAH;29
+HU;HUN;Ungarn;HUF;28
+UY;URY;Uruguay;UYU;0
+UZ;UZB;Usbekistan;UZS;0
+VU;VUT;Vanuatu;VUV;0
+VA;VAT;Vatikanstadt;EUR;22
+VE;VEN;Venezuela;VES;0
+AE;ARE;Vereinigte Arabische Emirate;AED;23
+GB;GBR;Vereinigtes Königreich;GBP;22
+US;USA;Vereinigte Staaten;USD;0
+VN;VNM;Vietnam;VND;0
+BY;BLR;Belarus;BYN;28
+CF;CAF;Zentralafrikanische Republik;XAF;0
+CY;CYP;Zypern;EUR;28
