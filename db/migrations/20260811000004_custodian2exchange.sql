@@ -5,7 +5,7 @@ CREATE TABLE custodian2exchange (
     idexchange UUID NOT NULL,
     idcustodian UUID NOT NULL,
 
-    value01 VARCHAR(255) NULL,
+    value01 VARCHAR(80) NOT NULL,
     value02 SMALLINT DEFAULT 0 NOT NULL,
 
     PRIMARY KEY (idexchange, idcustodian),

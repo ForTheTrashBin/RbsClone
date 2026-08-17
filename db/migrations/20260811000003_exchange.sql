@@ -6,11 +6,7 @@ CREATE TABLE exchange (
 
     shortcode VARCHAR(8) NOT NULL UNIQUE,
 
-    lastname VARCHAR(80) NOT NULL,
-    firstname VARCHAR(80) NULL,
-
-    statuscode SMALLINT DEFAULT 0 NOT NULL,
-    scorepoints SMALLINT DEFAULT 0 NOT NULL,
+    name VARCHAR(80) NOT NULL,
 
     CONSTRAINT chk_shortcode_uppercase CHECK (shortcode ~ '^[A-Z0-9ÄÖÜß]+$')
 );

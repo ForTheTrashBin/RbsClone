@@ -14,26 +14,26 @@ import (
 //-----------------------------------------------------------------------------
 
 type CountryNoPK struct {
-	Shortcode  string `json:"shortcode" minLength:"2" maxLength:"2"`
-	Name       string `json:"name" minLength:"1" maxLength:"30"`
-	Flags      int16  `json:"flags" format:"int16"`
-	Ibanlength *int16 `json:"ibanlenth,omitempty" format:"int16"`
-	Risktype   int16  `json:"risktype" format:"int16"`
+	Shortcode  string `json:"shortcode" minLength:"2" maxLength:"2" doc:"A unique short name for this data"`
+	Name       string `json:"name" minLength:"1" maxLength:"30" doc:"A longer more descriptive description of this data"`
+	Flags      int16  `json:"flags" format:"int16" minimum:"0" doc:"Some binary encodes flags for this data"`
+	Ibanlength *int16 `json:"ibanlenth,omitempty" format:"int16" minimum:"0" doc:"The exact length of the IBAN required in that country"`
+	Risktype   int16  `json:"risktype" format:"int16" minimum:"0" doc:"This risk profile of this country"`
 }
 
 type Country struct {
-	Id uuid.UUID `json:"id" format:"uuid"`
+	Id uuid.UUID `json:"id" format:"uuid" doc:"This is the unique identifier a this data"`
 	CountryNoPK
 }
 
 //-----------------------------------------------------------------------------
 
 type CountryRequestId struct {
-	Id uuid.UUID `path:"id" format:"uuid"`
+	Id uuid.UUID `path:"id" format:"uuid" doc:"This is the unique identifier a this data"`
 }
 
 type CountryRequestShortcode struct {
-	Shortcode string `path:"shortcode" minLength:"2" maxLength:"2"`
+	Shortcode string `path:"shortcode" minLength:"2" maxLength:"2" doc:"This is the unique identifier a this data"`
 }
 
 type CountryRequestNoPK struct {
@@ -41,15 +41,16 @@ type CountryRequestNoPK struct {
 }
 
 type CountryRequestUpdate struct {
-	Id   uuid.UUID `path:"id" format:"uuid"`
+	Id   uuid.UUID `path:"id" format:"uuid" doc:"This is the unique identifier a this data"`
 	Body CountryNoPK
 }
 
 //-----------------------------------------------------------------------------
 
 type CountryResponseId struct {
-	Id uuid.UUID `json:"id"`
+	Id uuid.UUID `header:"id" format:"uuid" doc:"Generated id for newly created data"`
 }
+
 type CountryResponse struct {
 	Body Country
 }
@@ -60,12 +61,13 @@ type CountriesResponse struct {
 
 //-----------------------------------------------------------------------------
 
-func (rs *RESTServer) registerCountryRoutes() {
+func (rs *RestServer) registerCountryRoutes() {
 
 	huma.Register(rs.api, huma.Operation{
 		Tags:        []string{"Country"},
 		OperationID: "getCountries",
 		Summary:     "Get a list of all countries",
+		Description: "Get a list of all countries",
 		Method:      http.MethodGet,
 		Path:        "/countries",
 	}, func(ctx context.Context, input *struct{}) (*CountriesResponse, error) {
@@ -80,7 +82,7 @@ func (rs *RESTServer) registerCountryRoutes() {
 
 			rs.logger.Error("ListCountries", "Error", err)
 
-			return nil, huma.Error500InternalServerError("Internal server error")
+			return nil, mapDBError(err)
 		}
 
 		result := make([]Country, len(dbSlice))
@@ -97,6 +99,7 @@ func (rs *RESTServer) registerCountryRoutes() {
 		Tags:        []string{"Country"},
 		OperationID: "getCountryById",
 		Summary:     "Get a single country based on the id supplied",
+		Description: "Get a single country based on the id supplied",
 		Method:      http.MethodGet,
 		Path:        "/country/id/{id}",
 	}, func(ctx context.Context, request *CountryRequestId) (*CountryResponse, error) {
@@ -117,7 +120,7 @@ func (rs *RESTServer) registerCountryRoutes() {
 
 				rs.logger.Error("ReadCountryById", "Error", err)
 
-				return nil, huma.Error500InternalServerError("Internal server error")
+				return nil, mapDBError(err)
 			}
 		}
 
@@ -130,6 +133,7 @@ func (rs *RESTServer) registerCountryRoutes() {
 		Tags:        []string{"Country"},
 		OperationID: "getCountryByShortcode",
 		Summary:     "Get a single country based on the shortcode supplied",
+		Description: "Get a single country based on the shortcode supplied",
 		Method:      http.MethodGet,
 		Path:        "/country/shortcode/{shortcode}",
 	}, func(ctx context.Context, request *CountryRequestShortcode) (*CountryResponse, error) {
@@ -150,7 +154,7 @@ func (rs *RESTServer) registerCountryRoutes() {
 
 				rs.logger.Error("ReadCountryById", "Error", err)
 
-				return nil, huma.Error500InternalServerError("Internal server error")
+				return nil, mapDBError(err)
 			}
 		}
 
@@ -165,6 +169,7 @@ func (rs *RESTServer) registerCountryRoutes() {
 		Tags:          []string{"Country"},
 		OperationID:   "createCountry",
 		Summary:       "Create a new country",
+		Description:   "Create a new country",
 		Method:        http.MethodPost,
 		Path:          "/country",
 		DefaultStatus: http.StatusCreated,
@@ -189,7 +194,7 @@ func (rs *RESTServer) registerCountryRoutes() {
 
 			rs.logger.Error("CreateCountry", "Error", err)
 
-			return nil, huma.Error500InternalServerError("Internal server error")
+			return nil, mapDBError(err)
 		}
 
 		return &CountryResponseId{Id: result}, nil
@@ -201,6 +206,7 @@ func (rs *RESTServer) registerCountryRoutes() {
 		Tags:          []string{"Country"},
 		OperationID:   "deleteCountry",
 		Summary:       "Delete a single country based on the id supplied",
+		Description:   "Delete a single country based on the id supplied",
 		Method:        http.MethodDelete,
 		Path:          "/country/{id}",
 		DefaultStatus: http.StatusNoContent,
@@ -216,7 +222,7 @@ func (rs *RESTServer) registerCountryRoutes() {
 
 			rs.logger.Error("DeleteCountry", "Error", err)
 
-			return nil, huma.Error500InternalServerError("Internal server error")
+			return nil, mapDBError(err)
 		}
 
 		if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
@@ -232,7 +238,8 @@ func (rs *RESTServer) registerCountryRoutes() {
 	huma.Register(rs.api, huma.Operation{
 		Tags:          []string{"Country"},
 		OperationID:   "updateCountry",
-		Summary:       "Update an existing country",
+		Summary:       "Update an existing country based on the id supplied",
+		Description:   "Update an existing country based on the id supplied",
 		Method:        http.MethodPut,
 		Path:          "/country/{id}",
 		DefaultStatus: http.StatusOK,
@@ -258,7 +265,7 @@ func (rs *RESTServer) registerCountryRoutes() {
 
 			rs.logger.Error("UpdateCountry", "Error", err)
 
-			return nil, huma.Error500InternalServerError("Internal server error")
+			return nil, mapDBError(err)
 		}
 
 		if rowsAffected := result.RowsAffected(); rowsAffected == 0 {

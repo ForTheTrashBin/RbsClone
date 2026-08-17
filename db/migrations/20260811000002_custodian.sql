@@ -8,7 +8,7 @@ CREATE TABLE custodian (
 
     name VARCHAR(30) NOT NULL,
 
-    flags SMALLINT DEFAULT 0 NULL,
+    flags SMALLINT DEFAULT 0 NOT NULL,
 
     idcountry UUID NOT NULL,
 

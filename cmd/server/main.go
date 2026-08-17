@@ -242,9 +242,40 @@ func main() {
 	// Create a listener to listen on the https port
 	//-------------------------------------------------------------------------
 
-	humaConfig := huma.DefaultConfig("API for Rbs", "0.1.0")
+	humaConfig := huma.DefaultConfig("API for the magnificent Rbs-Clone", "0.1.0")
+
+	//-------------------------------------------------------------------------
+
+	humaConfig.OpenAPI.Info.Title = "API for the magnificent Rbs-Clone"
+	humaConfig.OpenAPI.Info.Version = "0.1.0"
+
+	humaConfig.OpenAPI.Info.Contact = &huma.Contact{
+		Email: "info@rbsclode.de",
+		Name:  "Your magnificent RbsClone support team",
+		URL:   "https://support.rbsclone.de",
+	}
+
+	humaConfig.OpenAPI.Info.Description = "This is a detailed description of RbsClone. RbsClone is the best program in the world!"
+
+	humaConfig.OpenAPI.Info.License = &huma.License{
+		Name: "Apache 2.0",
+		URL:  "https://www.apache.org/licenses/LICENSE-2.0.html",
+	}
+
+	//-------------------------------------------------------------------------
+
+	server1 := huma.Server{URL: "https://www.rbsclone.de:8443", Description: "The address of the magnificent RbsClone server"}
+	server2 := huma.Server{URL: "http://www.rbsclone.de:8080", Description: "The address of the magnificent RbsClone server (redirected to port 8443)"}
+
+	server := []*huma.Server{&server1, &server2}
+
+	humaConfig.OpenAPI.Servers = server
+
+	//-------------------------------------------------------------------------
 
 	humaConfig.CreateHooks = nil
+
+	// humaConfig.DocsRenderer = huma.DocsRendererStoplightElements
 
 	//-------------------------------------------------------------------------
 

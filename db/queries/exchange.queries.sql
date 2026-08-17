@@ -4,7 +4,7 @@
 
 -- name: InsertExchange :one
 
-INSERT INTO EXCHANGE (shortcode, lastname, firstname, statuscode, scorepoints) VALUES ($1, $2, $3, $4, $5) RETURNING idExchange;
+INSERT INTO EXCHANGE (shortcode, name) VALUES ($1, $2) RETURNING idExchange;
 
 -- ----------------------------------------------------------------------------
 
@@ -24,7 +24,7 @@ SELECT * FROM EXCHANGE WHERE shortcode = $1 LIMIT 1;
 
 -- name: UpdateExchange :execresult
 
-UPDATE EXCHANGE SET shortcode = $2, lastname = $3, firstname = $4, statuscode = $5, scorepoints = $6 WHERE idexchange = $1;
+UPDATE EXCHANGE SET shortcode = $2, name = $3 WHERE idexchange = $1;
 
 -- ----------------------------------------------------------------------------
 
