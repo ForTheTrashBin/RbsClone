@@ -37,28 +37,28 @@ type Custodian2ExchangeRequestIdCustodian struct {
 
 //-----------------------------------------------------------------------------
 
-type SyncCustodian struct {
+type MapCustodian2Exchange struct {
 	Idcustodian uuid.UUID `json:"idcustodian" format:"uuid" doc:"This is one of the two parts of the unique identifier of this data"`
 	Custodian2ExchangeNoPK
 }
 
-type SyncCustodian2ExchangeRequestIdExchange struct {
+type MapCustodian2ExchangeRequestIdExchange struct {
 	Idexchange uuid.UUID `path:"idexchange" doc:"This is one of the two parts of the unique identifier of this data"`
 
-	Body []SyncCustodian
+	Body []MapCustodian2Exchange
 }
 
 //-----------------------------------------------------------------------------
 
-type SyncExchange struct {
+type MapExchange2Custodian struct {
 	Idexchange uuid.UUID `json:"idexchange" format:"uuid" doc:"This is one of the two parts of the unique identifier of this data"`
 	Custodian2ExchangeNoPK
 }
 
-type SyncCustodian2ExchangeRequestIdCustodian struct {
+type MapCustodian2ExchangeRequestIdCustodian struct {
 	Idcustodian uuid.UUID `json:"idcustodian" format:"uuid" doc:"This is one of the two parts of the unique identifier of this data"`
 
-	Body []SyncExchange
+	Body []MapExchange2Custodian
 }
 
 //-----------------------------------------------------------------------------
@@ -154,20 +154,20 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 	huma.Register(rs.api, huma.Operation{
 		Tags:          []string{"Custodian2Exchange"},
 		OperationID:   "mapCustodians2Exchange",
-		Summary:       "Create a new mapping of custodians to an exchange",
-		Description:   "Create a new mapping of custodians to an exchange",
+		Summary:       "Modify the mapping of multiple custodians to a single exchange",
+		Description:   "Modify the mapping of multiple custodians to a single exchange",
 		Method:        http.MethodPost,
 		Path:          "/custodian2exchange/{idexchange}",
 		DefaultStatus: http.StatusCreated,
-	}, func(ctx context.Context, request *SyncCustodian2ExchangeRequestIdExchange) (*struct{}, error) {
+	}, func(ctx context.Context, request *MapCustodian2ExchangeRequestIdExchange) (*struct{}, error) {
 
-		rs.logger.Info("SyncCustodian2ExchangeRequestIdExchange")
+		rs.logger.Info("MapCustodian2ExchangeRequestIdExchange")
 
 		tx, err := rs.db.Begin(ctx)
 
 		if err != nil {
 
-			rs.logger.Error("SyncCustodian2ExchangeRequestIdExchange", "error", err)
+			rs.logger.Error("MapCustodian2ExchangeRequestIdExchange", "error", err)
 
 			return nil, mapDBError(err)
 		}
@@ -184,7 +184,7 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 		if err != nil {
 
-			rs.logger.Error("SyncCustodian2ExchangeRequestIdExchange", "error", err)
+			rs.logger.Error("MapCustodian2ExchangeRequestIdExchange", "error", err)
 
 			return nil, huma.Error500InternalServerError("Internal server error")
 		}
@@ -200,7 +200,7 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 		//---------------------------------------------------------------------
 
-		targetMap := make(map[uuid.UUID]SyncCustodian)
+		targetMap := make(map[uuid.UUID]MapCustodian2Exchange)
 
 		for _, target := range request.Body {
 
@@ -228,7 +228,7 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 				if err != nil {
 
-					rs.logger.Error("SyncCustodian2ExchangeRequestIdExchange", "error", err)
+					rs.logger.Error("MapCustodian2ExchangeRequestIdExchange", "error", err)
 
 					return nil, huma.Error500InternalServerError("Internal server error")
 				}
@@ -247,7 +247,7 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 					if err != nil {
 
-						rs.logger.Error("SyncCustodian2ExchangeRequestIdExchange", "error", err)
+						rs.logger.Error("MapCustodian2ExchangeRequestIdExchange", "error", err)
 
 						return nil, huma.Error500InternalServerError("Internal server error")
 					}
@@ -271,7 +271,7 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 				if err != nil {
 
-					rs.logger.Error("SyncCustodian2ExchangeRequestIdExchange", "error", err)
+					rs.logger.Error("MapCustodian2ExchangeRequestIdExchange", "error", err)
 
 					return nil, huma.Error500InternalServerError("Internal server error")
 				}
@@ -286,20 +286,20 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 	huma.Register(rs.api, huma.Operation{
 		Tags:          []string{"Custodian2Exchange"},
 		OperationID:   "mapExchanges2Custodian",
-		Summary:       "Create a new mapping of exchanges to a custodian",
-		Description:   "Create a new mapping of exchanges to a custodian",
+		Summary:       "Modify the mapping of multiple exchanges to a single custodian",
+		Description:   "Modify the mapping of multiple exchanges to a single custodian",
 		Method:        http.MethodPost,
 		Path:          "/exchange2custodian/{idcustodian}",
 		DefaultStatus: http.StatusCreated,
-	}, func(ctx context.Context, request *SyncCustodian2ExchangeRequestIdCustodian) (*struct{}, error) {
+	}, func(ctx context.Context, request *MapCustodian2ExchangeRequestIdCustodian) (*struct{}, error) {
 
-		rs.logger.Info("SyncCustodian2ExchangeRequestIdCustodian")
+		rs.logger.Info("MapCustodian2ExchangeRequestIdCustodian")
 
 		tx, err := rs.db.Begin(ctx)
 
 		if err != nil {
 
-			rs.logger.Error("SyncCustodian2ExchangeRequestIdCustodian", "error", err)
+			rs.logger.Error("MapCustodian2ExchangeRequestIdCustodian", "error", err)
 
 			return nil, mapDBError(err)
 		}
@@ -316,7 +316,7 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 		if err != nil {
 
-			rs.logger.Error("SyncCustodian2ExchangeRequestIdCustodian", "error", err)
+			rs.logger.Error("MapCustodian2ExchangeRequestIdCustodian", "error", err)
 
 			return nil, huma.Error500InternalServerError("Internal server error")
 		}
@@ -332,7 +332,7 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 		//---------------------------------------------------------------------
 
-		targetMap := make(map[uuid.UUID]SyncExchange)
+		targetMap := make(map[uuid.UUID]MapExchange2Custodian)
 
 		for _, target := range request.Body {
 
@@ -360,7 +360,7 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 				if err != nil {
 
-					rs.logger.Error("SyncCustodian2ExchangeRequestIdCustodian", "error", err)
+					rs.logger.Error("MapCustodian2ExchangeRequestIdCustodian", "error", err)
 
 					return nil, huma.Error500InternalServerError("Internal server error")
 				}
@@ -379,7 +379,7 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 					if err != nil {
 
-						rs.logger.Error("SyncCustodian2ExchangeRequestIdCustodian", "error", err)
+						rs.logger.Error("MapCustodian2ExchangeRequestIdCustodian", "error", err)
 
 						return nil, huma.Error500InternalServerError("Internal server error")
 					}
@@ -403,7 +403,7 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 				if err != nil {
 
-					rs.logger.Error("SyncCustodian2ExchangeRequestIdCustodian", "error", err)
+					rs.logger.Error("MapCustodian2ExchangeRequestIdCustodian", "error", err)
 
 					return nil, huma.Error500InternalServerError("Internal server error")
 				}
