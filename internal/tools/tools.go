@@ -46,7 +46,7 @@ func InitializeCountry(logger *slog.Logger, dbPool *pgxpool.Pool) {
 
 	if err != nil {
 
-		logger.Error("Fehler beim Lesen der Kopfzeile", "Error", err)
+		logger.Error("Fehler beim Lesen der Kopfzeile", "error", err)
 
 		return
 	}
@@ -77,7 +77,7 @@ func InitializeCountry(logger *slog.Logger, dbPool *pgxpool.Pool) {
 
 		if err != nil {
 
-			logger.Error("Fehler beim Lesen einer Zeile (Übersprungen)", "Error", err)
+			logger.Error("Fehler beim Lesen einer Zeile (Übersprungen)", "error", err)
 
 			continue
 		}
@@ -94,7 +94,7 @@ func InitializeCountry(logger *slog.Logger, dbPool *pgxpool.Pool) {
 
 		if err != nil {
 
-			logger.Error("Ungültige IBAN-Länge. Setze auf 0.", "Land", landDe, "Error", err)
+			logger.Error("Ungültige IBAN-Länge. Setze auf 0.", "Land", landDe, "error", err)
 
 			ibanLaengeInt = 0
 		}
@@ -111,7 +111,7 @@ func InitializeCountry(logger *slog.Logger, dbPool *pgxpool.Pool) {
 		})
 		if err != nil {
 
-			logger.Error("Fehler beim Einfügen", "Land", landDe, "Error", err)
+			logger.Error("Fehler beim Einfügen", "Land", landDe, "error", err)
 
 			continue
 		}

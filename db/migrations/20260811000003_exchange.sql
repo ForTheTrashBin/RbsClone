@@ -8,6 +8,8 @@ CREATE TABLE exchange (
 
     name VARCHAR(80) NOT NULL,
 
+    flags SMALLINT DEFAULT 0 NOT NULL,
+
     CONSTRAINT chk_shortcode_uppercase CHECK (shortcode ~ '^[A-Z0-9ÄÖÜß]+$')
 );
 -- +goose StatementEnd

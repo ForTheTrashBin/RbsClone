@@ -14,6 +14,7 @@ import (
 //-----------------------------------------------------------------------------
 
 type Custodian2ExchangeNoPK struct {
+	Flags   int16  `json:"flags" format:"int16" minimum:"0" doc:"Some binary encoded flags for this data (see external documentation)"`
 	Value01 string `json:"value01" minLength:"1" maxLength:"80" doc:"A value01 for this data"`
 	Value02 int16  `json:"value02" format:"int16" minimum:"0" doc:"A value01 for this data"`
 }
@@ -34,51 +35,38 @@ type Custodian2ExchangeRequestIdCustodian struct {
 	Idcustodian uuid.UUID `path:"idcustodian" format:"uuid" doc:"This is one of the two parts of the unique identifier of this data"`
 }
 
+//-----------------------------------------------------------------------------
+
 type SyncCustodian struct {
-	Idcustodian uuid.UUID `json:"idcustodian" format:"uuid" doc:"This is the second of the two parts of the unique identifier of this data"`
+	Idcustodian uuid.UUID `json:"idcustodian" format:"uuid" doc:"This is one of the two parts of the unique identifier of this data"`
 	Custodian2ExchangeNoPK
 }
 
 type SyncCustodian2ExchangeRequestIdExchange struct {
-	Idexchange uuid.UUID `path:"idexchange" doc:"This is the first of the two parts of the unique identifier of this data"`
+	Idexchange uuid.UUID `path:"idexchange" doc:"This is one of the two parts of the unique identifier of this data"`
 
 	Body struct {
 		Custodians []SyncCustodian
 	}
 }
 
-type SyncCustodian2ExchangeRequestIdCustodian struct {
-	Idcustodian uuid.UUID `path:"idcustodian" format:"uuid" doc:"This is one of the two parts of the unique identifier of this data"`
-
-	Body struct {
-		Exchanges []struct {
-			Idexchange uuid.UUID `json:"idexchange" format:"uuid" doc:"This is one of the two parts of the unique identifier of this data"`
-			Custodian2ExchangeNoPK
-		}
-	}
+//-----------------------------------------------------------------------------
+/* NOT USED YET
+type SyncExchange struct {
+	Idexchange uuid.UUID `json:"idexchange" format:"uuid" doc:"This is one of the two parts of the unique identifier of this data"`
+	Custodian2ExchangeNoPK
 }
 
-/*
-	type Custodian2ExchangeRequestNoPK struct {
-		Body Custodian2ExchangeNoPK
-	}
+type SyncCustodian2ExchangeRequestIdCustodian struct {
+	Idcustodian uuid.UUID `json:"idcustodian" format:"uuid" doc:"This is one of the two parts of the unique identifier of this data"`
 
-	type Custodian2ExchangeRequestUpdate struct {
-		Id   uuid.UUID `path:"id" format:"uuid" doc:"This is the unique identifier a this data"`
-		Body Custodian2ExchangeNoPK
+	Body struct {
+		Exchanges []SyncExchange
 	}
-
-//-----------------------------------------------------------------------------
-/*
-
-	type Custodian2ExchangeResponseIdExchange struct {
-		Idexchange uuid.UUID `json:"idexchange" format:"uuid" doc:"This is one of the two parts of the unique identifier of this data"`
-	}
-
-	type Custodian2ExchangeResponseIdCustodian struct {
-		Idcustodian uuid.UUID `json:"idcustodian" format:"uuid" doc:"This is one of the two parts of the unique identifier of this data"`
-	}
+}
 */
+//-----------------------------------------------------------------------------
+
 type Custodian2ExchangeResponse struct {
 	Body []Custodian2Exchange
 }
@@ -110,7 +98,7 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 			} else {
 
-				rs.logger.Error("ReadCustodian2ExchangeById", "Error", err)
+				rs.logger.Error("ReadCustodian2ExchangeById", "error", err)
 
 				return nil, mapDBError(err)
 			}
@@ -149,7 +137,7 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 			} else {
 
-				rs.logger.Error("ReadCustodian2ExchangeById", "Error", err)
+				rs.logger.Error("ReadCustodian2ExchangeById", "error", err)
 
 				return nil, mapDBError(err)
 			}
@@ -183,7 +171,7 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 		if err != nil {
 
-			rs.logger.Error("CreateCustodian2Exchange", "Error", err)
+			rs.logger.Error("CreateCustodian2Exchange", "error", err)
 
 			return nil, mapDBError(err)
 		}
@@ -200,7 +188,7 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 		if err != nil {
 
-			rs.logger.Error("SyncCustodian2ExchangeRequestIdExchange", "Error", err)
+			rs.logger.Error("SyncCustodian2ExchangeRequestIdExchange", "error", err)
 
 			return nil, huma.Error500InternalServerError("Internal server error")
 		}
@@ -237,31 +225,33 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 					Idexchange:  request.Idexchange,
 					Idcustodian: target.Idcustodian,
+					Flags:       target.Flags,
 					Value01:     target.Value01,
 					Value02:     target.Value02,
 				})
 
 				if err != nil {
 
-					rs.logger.Error("SyncCustodian2ExchangeRequestIdExchange", "Error", err)
+					rs.logger.Error("SyncCustodian2ExchangeRequestIdExchange", "error", err)
 
 					return nil, huma.Error500InternalServerError("Internal server error")
 				}
 			} else {
 
-				if existing.Value01 != target.Value01 || existing.Value02 != target.Value02 {
+				if existing.Flags != target.Flags || existing.Value01 != target.Value01 || existing.Value02 != target.Value02 {
 
 					_, err := queries.UpdateCustodian2Exchange(ctx, rbsdb.UpdateCustodian2ExchangeParams{
 
 						Idexchange:  request.Idexchange,
 						Idcustodian: target.Idcustodian,
+						Flags:       target.Flags,
 						Value01:     target.Value01,
 						Value02:     target.Value02,
 					})
 
 					if err != nil {
 
-						rs.logger.Error("SyncCustodian2ExchangeRequestIdExchange", "Error", err)
+						rs.logger.Error("SyncCustodian2ExchangeRequestIdExchange", "error", err)
 
 						return nil, huma.Error500InternalServerError("Internal server error")
 					}
@@ -285,7 +275,7 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 				if err != nil {
 
-					rs.logger.Error("SyncCustodian2ExchangeRequestIdExchange", "Error", err)
+					rs.logger.Error("SyncCustodian2ExchangeRequestIdExchange", "error", err)
 
 					return nil, huma.Error500InternalServerError("Internal server error")
 				}
@@ -296,6 +286,8 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 	})
 }
 
+//-----------------------------------------------------------------------------
+
 func mapDB2APICustodian2Exchange(record rbsdb.Custodian2exchange) Custodian2Exchange {
 
 	return Custodian2Exchange{
@@ -304,6 +296,7 @@ func mapDB2APICustodian2Exchange(record rbsdb.Custodian2exchange) Custodian2Exch
 		Idcustodian: record.Idcustodian,
 
 		Custodian2ExchangeNoPK: Custodian2ExchangeNoPK{
+			Flags:   record.Flags,
 			Value01: record.Value01,
 			Value02: record.Value02,
 		},

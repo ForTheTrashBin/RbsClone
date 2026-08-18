@@ -16,9 +16,9 @@ import (
 type CustodianNoPK struct {
 	Shortcode string    `json:"shortcode" minLength:"1" maxLength:"5" doc:"A unique short name for this data"`
 	Name      string    `json:"name" minLength:"1" maxLength:"30" doc:"A longer more descriptive description of this data"`
-	Flags     int16     `json:"flags" format:"int16" minimum:"0" doc:"Some binary encodes flags for this data"`
+	Flags     int16     `json:"flags" format:"int16" minimum:"0" doc:"Some binary encoded flags for this data (see external documentation)"`
 	Idcountry uuid.UUID `json:"idcountry" format:"uuid" doc:"A reference to a country, where the custodion is in"`
-	Depotno   *string   `json:"depotna,omitempty" maxLength:"10" doc:"This dopot numer assocciated with this custodian"`
+	Depotno   *string   `json:"depotno,omitempty" maxLength:"10" doc:"This dopot numer assocciated with this custodian"`
 }
 
 type Custodian struct {
@@ -36,7 +36,7 @@ type CustodianRequestShortcode struct {
 	Shortcode string `path:"shortcode" minLength:"1" maxLength:"5" doc:"This is the unique identifier a this data"`
 }
 
-type CustodianRequestNoPK struct {
+type CustodianRequestCreate struct {
 	Body CustodianNoPK
 }
 
@@ -47,7 +47,7 @@ type CustodianRequestUpdate struct {
 
 //-----------------------------------------------------------------------------
 
-type CustodianResponseId struct {
+type CustodianResponseCreate struct {
 	Id uuid.UUID `header:"id" format:"uuid" doc:"Generated id for newly created data"`
 }
 type CustodianResponse struct {
@@ -79,7 +79,7 @@ func (rs *RestServer) registerCustodianRoutes() {
 
 		if err != nil {
 
-			rs.logger.Error("ListCustodians", "Error", err)
+			rs.logger.Error("ListCustodians", "error", err)
 
 			return nil, mapDBError(err)
 		}
@@ -117,7 +117,7 @@ func (rs *RestServer) registerCustodianRoutes() {
 
 			} else {
 
-				rs.logger.Error("ReadCustodianById", "Error", err)
+				rs.logger.Error("ReadCustodianById", "error", err)
 
 				return nil, mapDBError(err)
 			}
@@ -151,7 +151,7 @@ func (rs *RestServer) registerCustodianRoutes() {
 
 			} else {
 
-				rs.logger.Error("ReadCustodianById", "Error", err)
+				rs.logger.Error("ReadCustodianById", "error", err)
 
 				return nil, mapDBError(err)
 			}
@@ -172,7 +172,7 @@ func (rs *RestServer) registerCustodianRoutes() {
 		Method:        http.MethodPost,
 		Path:          "/custodian",
 		DefaultStatus: http.StatusCreated,
-	}, func(ctx context.Context, request *CustodianRequestNoPK) (*CustodianResponseId, error) {
+	}, func(ctx context.Context, request *CustodianRequestCreate) (*CustodianResponseCreate, error) {
 
 		rs.logger.Info("CreateCustodian")
 
@@ -191,12 +191,12 @@ func (rs *RestServer) registerCustodianRoutes() {
 
 		if err != nil {
 
-			rs.logger.Error("CreateCustodian", "Error", err)
+			rs.logger.Error("CreateCustodian", "error", err)
 
 			return nil, mapDBError(err)
 		}
 
-		return &CustodianResponseId{Id: result}, nil
+		return &CustodianResponseCreate{Id: result}, nil
 	})
 
 	//-------------------------------------------------------------------------
@@ -219,7 +219,7 @@ func (rs *RestServer) registerCustodianRoutes() {
 
 		if err != nil {
 
-			rs.logger.Error("DeleteCustodian", "Error", err)
+			rs.logger.Error("DeleteCustodian", "error", err)
 
 			return nil, mapDBError(err)
 		}
@@ -262,7 +262,7 @@ func (rs *RestServer) registerCustodianRoutes() {
 
 		if err != nil {
 
-			rs.logger.Error("UpdateCustodian", "Error", err)
+			rs.logger.Error("UpdateCustodian", "error", err)
 
 			return nil, mapDBError(err)
 		}
@@ -275,6 +275,8 @@ func (rs *RestServer) registerCustodianRoutes() {
 		return nil, nil
 	})
 }
+
+//-----------------------------------------------------------------------------
 
 func mapDB2APICustodian(record rbsdb.Custodian) Custodian {
 

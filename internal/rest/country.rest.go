@@ -16,7 +16,7 @@ import (
 type CountryNoPK struct {
 	Shortcode  string `json:"shortcode" minLength:"2" maxLength:"2" doc:"A unique short name for this data"`
 	Name       string `json:"name" minLength:"1" maxLength:"30" doc:"A longer more descriptive description of this data"`
-	Flags      int16  `json:"flags" format:"int16" minimum:"0" doc:"Some binary encodes flags for this data"`
+	Flags      int16  `json:"flags" format:"int16" minimum:"0" doc:"Some binary encoded flags for this data (see external documentation)"`
 	Ibanlength *int16 `json:"ibanlenth,omitempty" format:"int16" minimum:"0" doc:"The exact length of the IBAN required in that country"`
 	Risktype   int16  `json:"risktype" format:"int16" minimum:"0" doc:"This risk profile of this country"`
 }
@@ -36,7 +36,7 @@ type CountryRequestShortcode struct {
 	Shortcode string `path:"shortcode" minLength:"2" maxLength:"2" doc:"This is the unique identifier a this data"`
 }
 
-type CountryRequestNoPK struct {
+type CountryRequestCreate struct {
 	Body CountryNoPK
 }
 
@@ -47,7 +47,7 @@ type CountryRequestUpdate struct {
 
 //-----------------------------------------------------------------------------
 
-type CountryResponseId struct {
+type CountryResponseCreate struct {
 	Id uuid.UUID `header:"id" format:"uuid" doc:"Generated id for newly created data"`
 }
 
@@ -80,7 +80,7 @@ func (rs *RestServer) registerCountryRoutes() {
 
 		if err != nil {
 
-			rs.logger.Error("ListCountries", "Error", err)
+			rs.logger.Error("ListCountries", "error", err)
 
 			return nil, mapDBError(err)
 		}
@@ -118,7 +118,7 @@ func (rs *RestServer) registerCountryRoutes() {
 
 			} else {
 
-				rs.logger.Error("ReadCountryById", "Error", err)
+				rs.logger.Error("ReadCountryById", "error", err)
 
 				return nil, mapDBError(err)
 			}
@@ -152,7 +152,7 @@ func (rs *RestServer) registerCountryRoutes() {
 
 			} else {
 
-				rs.logger.Error("ReadCountryById", "Error", err)
+				rs.logger.Error("ReadCountryById", "error", err)
 
 				return nil, mapDBError(err)
 			}
@@ -173,7 +173,7 @@ func (rs *RestServer) registerCountryRoutes() {
 		Method:        http.MethodPost,
 		Path:          "/country",
 		DefaultStatus: http.StatusCreated,
-	}, func(ctx context.Context, request *CountryRequestNoPK) (*CountryResponseId, error) {
+	}, func(ctx context.Context, request *CountryRequestCreate) (*CountryResponseCreate, error) {
 
 		rs.logger.Info("CreateCountry")
 
@@ -192,12 +192,12 @@ func (rs *RestServer) registerCountryRoutes() {
 
 		if err != nil {
 
-			rs.logger.Error("CreateCountry", "Error", err)
+			rs.logger.Error("CreateCountry", "error", err)
 
 			return nil, mapDBError(err)
 		}
 
-		return &CountryResponseId{Id: result}, nil
+		return &CountryResponseCreate{Id: result}, nil
 	})
 
 	//-------------------------------------------------------------------------
@@ -220,7 +220,7 @@ func (rs *RestServer) registerCountryRoutes() {
 
 		if err != nil {
 
-			rs.logger.Error("DeleteCountry", "Error", err)
+			rs.logger.Error("DeleteCountry", "error", err)
 
 			return nil, mapDBError(err)
 		}
@@ -263,7 +263,7 @@ func (rs *RestServer) registerCountryRoutes() {
 
 		if err != nil {
 
-			rs.logger.Error("UpdateCountry", "Error", err)
+			rs.logger.Error("UpdateCountry", "error", err)
 
 			return nil, mapDBError(err)
 		}
@@ -276,6 +276,8 @@ func (rs *RestServer) registerCountryRoutes() {
 		return nil, nil
 	})
 }
+
+//-----------------------------------------------------------------------------
 
 func mapDB2APICountry(record rbsdb.Country) Country {
 

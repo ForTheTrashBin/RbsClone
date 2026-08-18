@@ -16,6 +16,7 @@ import (
 type ExchangeNoPK struct {
 	Shortcode string `json:"shortcode" minLength:"1" maxLength:"8" doc:"A unique short name for this data"`
 	Name      string `json:"name" minLength:"1" maxLength:"80" doc:"A longer more descriptive description of this data"`
+	Flags     int16  `json:"flags" format:"int16" minimum:"0" doc:"Some binary encoded flags for this data (see external documentation)"`
 }
 
 type Exchange struct {
@@ -33,7 +34,7 @@ type ExchangeRequestShortcode struct {
 	Shortcode string `path:"shortcode" minLength:"1" maxLength:"8" doc:"This is the unique identifier a this data"`
 }
 
-type ExchangeRequestNoPK struct {
+type ExchangeRequestCreate struct {
 	Body ExchangeNoPK
 }
 
@@ -44,7 +45,7 @@ type ExchangeRequestUpdate struct {
 
 //-----------------------------------------------------------------------------
 
-type ExchangeResponseId struct {
+type ExchangeResponseCreate struct {
 	Id uuid.UUID `header:"id" format:"uuid" doc:"Generated id for newly created data"`
 }
 type ExchangeResponse struct {
@@ -76,7 +77,7 @@ func (rs *RestServer) registerExchangeRoutes() {
 
 		if err != nil {
 
-			rs.logger.Error("ListExchanges", "Error", err)
+			rs.logger.Error("ListExchanges", "error", err)
 
 			return nil, mapDBError(err)
 		}
@@ -114,7 +115,7 @@ func (rs *RestServer) registerExchangeRoutes() {
 
 			} else {
 
-				rs.logger.Error("ReadExchangeById", "Error", err)
+				rs.logger.Error("ReadExchangeById", "error", err)
 
 				return nil, mapDBError(err)
 			}
@@ -148,7 +149,7 @@ func (rs *RestServer) registerExchangeRoutes() {
 
 			} else {
 
-				rs.logger.Error("ReadExchangeById", "Error", err)
+				rs.logger.Error("ReadExchangeById", "error", err)
 
 				return nil, mapDBError(err)
 			}
@@ -169,7 +170,7 @@ func (rs *RestServer) registerExchangeRoutes() {
 		Method:        http.MethodPost,
 		Path:          "/exchange",
 		DefaultStatus: http.StatusCreated,
-	}, func(ctx context.Context, request *ExchangeRequestNoPK) (*ExchangeResponseId, error) {
+	}, func(ctx context.Context, request *ExchangeRequestCreate) (*ExchangeResponseCreate, error) {
 
 		rs.logger.Info("CreateExchange")
 
@@ -179,18 +180,19 @@ func (rs *RestServer) registerExchangeRoutes() {
 
 			Shortcode: request.Body.Shortcode,
 			Name:      request.Body.Name,
+			Flags:     request.Body.Flags,
 		}
 
 		result, err := queries.InsertExchange(ctx, insertParams)
 
 		if err != nil {
 
-			rs.logger.Error("CreateExchange", "Error", err)
+			rs.logger.Error("CreateExchange", "error", err)
 
 			return nil, mapDBError(err)
 		}
 
-		return &ExchangeResponseId{Id: result}, nil
+		return &ExchangeResponseCreate{Id: result}, nil
 	})
 
 	//-------------------------------------------------------------------------
@@ -213,7 +215,7 @@ func (rs *RestServer) registerExchangeRoutes() {
 
 		if err != nil {
 
-			rs.logger.Error("DeleteExchange", "Error", err)
+			rs.logger.Error("DeleteExchange", "error", err)
 
 			return nil, mapDBError(err)
 		}
@@ -247,13 +249,14 @@ func (rs *RestServer) registerExchangeRoutes() {
 			Idexchange: request.Id,
 			Shortcode:  request.Body.Shortcode,
 			Name:       request.Body.Name,
+			Flags:      request.Body.Flags,
 		}
 
 		result, err := queries.UpdateExchange(ctx, updateParams)
 
 		if err != nil {
 
-			rs.logger.Error("UpdateExchange", "Error", err)
+			rs.logger.Error("UpdateExchange", "error", err)
 
 			return nil, mapDBError(err)
 		}
@@ -267,6 +270,8 @@ func (rs *RestServer) registerExchangeRoutes() {
 	})
 }
 
+//-----------------------------------------------------------------------------
+
 func mapDB2APIExchange(record rbsdb.Exchange) Exchange {
 
 	return Exchange{
@@ -275,6 +280,7 @@ func mapDB2APIExchange(record rbsdb.Exchange) Exchange {
 		ExchangeNoPK: ExchangeNoPK{
 			Shortcode: record.Shortcode,
 			Name:      record.Name,
+			Flags:     record.Flags,
 		},
 	}
 }
