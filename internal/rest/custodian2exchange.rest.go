@@ -56,7 +56,7 @@ type MapExchange2Custodian struct {
 }
 
 type MapCustodian2ExchangeRequestIdCustodian struct {
-	Idcustodian uuid.UUID `json:"idcustodian" format:"uuid" doc:"This is one of the two parts of the unique identifier of this data"`
+	Idcustodian uuid.UUID `path:"idcustodian" format:"uuid" doc:"This is one of the two parts of the unique identifier of this data"`
 
 	Body []MapExchange2Custodian
 }

@@ -32,6 +32,8 @@ certs/
 
 # Generated
 internal/rbsdb
+cmd/tools/openapi/openapi.yaml
+cmd/client/client.gen.go
 
 # Editor/IDE
 # .idea/
