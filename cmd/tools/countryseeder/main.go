@@ -71,8 +71,6 @@ func seedCountries(logger *slog.Logger, dbPool *pgxpool.Pool) error {
 
 	baseQueries := rbsdb.New(dbPool)
 
-	count := 0
-
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 
 	defer cancel()
@@ -133,8 +131,6 @@ func seedCountries(logger *slog.Logger, dbPool *pgxpool.Pool) error {
 
 			// continue
 		}
-
-		count++
 	}
 
 	logger.Info("Import of country data finished")
