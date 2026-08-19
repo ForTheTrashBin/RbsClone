@@ -1,4 +1,4 @@
-package tools
+package main
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"time"
 
@@ -17,50 +18,58 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func initializeCountry(logger *slog.Logger, dbPool *pgxpool.Pool) {
+func seedCountries(logger *slog.Logger, dbPool *pgxpool.Pool) error {
 
-	wd, err := os.Getwd()
+	inputName := "countries.csv"
 
-	logger.Info("Arbeitsverzeichnis", "Path", wd)
+	//-------------------------------------------------------------------------
+	// Evaluate current tool position to place result
+	//-------------------------------------------------------------------------
 
-	thefile := filepath.Join(wd, "internal/tools/countries.csv")
+	_, goFileName, _, ok := runtime.Caller(0)
 
-	file, err := os.Open(thefile)
+	if !ok {
+
+		return fmt.Errorf("Can't evaluate file position")
+	}
+
+	inputPath := filepath.Join(filepath.Dir(goFileName), inputName)
+
+	file, err := os.Open(inputPath)
 
 	if err != nil {
 
-		logger.Error("Fehler beim Öffnen der CSV-Datei", "Fatal", err)
-
-		return
+		return fmt.Errorf("Can't open csv file, error: %w", err)
 	}
 
 	defer file.Close()
 
-	// 2. CSV-Reader konfigurieren (wichtig: Semikolon als Trennzeichen)
+	//-------------------------------------------------------------------------
+	// Configure CSV-Reader (importand: Semikolon as delimiter)
+	//-------------------------------------------------------------------------
 
 	reader := csv.NewReader(file)
 	reader.Comma = ';'
 	reader.LazyQuotes = true
 
-	// 3. Kopfzeile (Header) überspringen
+	//-------------------------------------------------------------------------
+	// Skip headline
+	//-------------------------------------------------------------------------
 
 	_, err = reader.Read()
 
 	if err != nil {
 
-		logger.Error("Fehler beim Lesen der Kopfzeile", "error", err)
-
-		return
+		return fmt.Errorf("Error reading headline, error: %w", err)
 	}
 
-	// 4. Ihre bestehende Datenbankverbindung nutzen
-	// (Hier wird vorausgesetzt, dass Sie 'dbConn' als *sql.DB oder pgx-Verbindung bereits haben)
-
+	//-------------------------------------------------------------------------
+	// Read CSV file and insert into database
 	//-------------------------------------------------------------------------
 
-	baseQueries := rbsdb.New(dbPool)
+	logger.Info("Start import of country data...")
 
-	logger.Info("Starte Import der Länder-Stammdaten...")
+	baseQueries := rbsdb.New(dbPool)
 
 	count := 0
 
@@ -68,60 +77,69 @@ func initializeCountry(logger *slog.Logger, dbPool *pgxpool.Pool) {
 
 	defer cancel()
 
-	// 5. Zeile für Zeile einlesen und in die DB schreiben
 	for {
 		record, err := reader.Read()
 
 		if err == io.EOF {
 
-			break // Ende der Datei erreicht
+			break // End of file reached
 		}
 
 		if err != nil {
 
-			logger.Error("Fehler beim Lesen einer Zeile (Übersprungen)", "error", err)
+			logger.Error("Error reading a line (skiped)", "error", err)
 
 			continue
 		}
 
-		// Daten aus den CSV-Spalten extrahieren
-		iso2 := record[0]
-		// iso3 := record[1]
-		landDe := record[2]
-		// waehrung := record[3]
+		//---------------------------------------------------------------------
+		// Read data from CSV columns
+		//---------------------------------------------------------------------
 
-		// IBAN-Länge von String zu int/int32 konvertieren
+		shortcode := record[0]
+		name := record[2]
 
-		ibanLaengeInt, err := strconv.Atoi(record[4])
+		//---------------------------------------------------------------------
+		// Convert IBAN length to int/int32
+		//---------------------------------------------------------------------
+
+		ibanLengthInt, err := strconv.Atoi(record[4])
 
 		if err != nil {
 
-			logger.Error("Ungültige IBAN-Länge. Setze auf 0.", "Land", landDe, "error", err)
+			logger.Error("Invalid IBAN-length. Set to zero!", "country", shortcode)
 
-			ibanLaengeInt = 0
+			ibanLengthInt = 0
 		}
 
-		ibanLaenge := int16(ibanLaengeInt)
+		ibanLength := int16(ibanLengthInt)
 
-		// 6. Aufruf der von sqlc generierten Insert-Methode
+		//---------------------------------------------------------------------
+		// Call database via SQLC to insert record
+		//---------------------------------------------------------------------
 
 		_, err = baseQueries.InsertCountry(ctx, rbsdb.InsertCountryParams{
 
-			Shortcode:  iso2,
-			Name:       landDe,
-			Ibanlength: pgtype.Int2{Int16: ibanLaenge, Valid: ibanLaenge > 0},
+			Shortcode:  shortcode,
+			Name:       name,
+			Ibanlength: pgtype.Int2{Int16: ibanLength, Valid: ibanLength > 0},
 		})
+
 		if err != nil {
 
-			logger.Error("Fehler beim Einfügen", "Land", landDe, "error", err)
+			return fmt.Errorf("Error insert record: %w", err)
 
-			continue
+			// logger.Error("Error insert record", "country", shortcode, "error", err)
+
+			// continue
 		}
 
 		count++
 	}
 
-	logger.Info("Import erfolgreich abgeschlossen!", "Count", count)
+	logger.Info("Import of country data finished")
+
+	return nil
 }
 
 //-----------------------------------------------------------------------------
@@ -234,5 +252,8 @@ func main() {
 
 	//-------------------------------------------------------------------------
 
-	initializeCountry(logger, dbPool)
+	if err := seedCountries(logger, dbPool); err != nil {
+
+		logger.Error("Error initializing countries", "error", err)
+	}
 }
