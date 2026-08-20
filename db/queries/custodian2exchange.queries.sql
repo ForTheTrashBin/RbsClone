@@ -24,7 +24,7 @@ SELECT * FROM CUSTODIAN2EXCHANGE WHERE idexchange = $1 AND idcustodian = $2 LIMI
 
 -- name: UpdateCustodian2Exchange :execresult
 
-UPDATE CUSTODIAN2EXCHANGE SET flags = $3, value01 = $4, value02 = $5,  WHERE idexchange = $1 AND idcustodian = $2;
+UPDATE CUSTODIAN2EXCHANGE SET flags = $3, value01 = $4, value02 = $5 WHERE idexchange = $1 AND idcustodian = $2;
 
 -- ----------------------------------------------------------------------------
 

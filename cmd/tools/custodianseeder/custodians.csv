@@ -1,0 +1,44 @@
+﻿Lagerstellen_Kuerzel;Offizieller_Name;Land_ISO;Beschreibung_Typ;Hauptwaehrung;BIC_Code
+DTC;Depository Trust Company;US;Nationaler Zentralverwahrer für US-Wertpapiere (DTCC);USD;DTCCHUNYXXXX
+FED;Federal Reserve Banks (Fedwire);US;Zentralverwahrer für US-Staatsanleihen;USD;FRNYUS33XXXX
+CDS;CDS Clearing and Depository Services;CA;Nationaler Zentralverwahrer Kanada;CAD;CDSCCATTXXXX
+CBF;Clearstream Banking Frankfurt;DE;Nationaler Zentralverwahrer Deutschland;EUR;CEBFFRDEFA1
+CBL;Clearstream Banking Luxembourg;LU;Internationaler Zentralverwahrer (ICSD);EUR;CEBLLULLXXXX
+ECL;Euroclear Bank;BE;Internationaler Zentralverwahrer (ICSD);EUR;EUCLEUBBXXXX
+ECFR;Euroclear France;FR;Nationaler Zentralverwahrer Frankreich;EUR;OBCFFRPTXXXX
+ECNL;Euroclear Nederland;NL;Nationaler Zentralverwahrer Niederlande;EUR;AMSTNL2AXXXX
+ECBE;Euroclear Belgium;BE;Nationaler Zentralverwahrer Belgien;EUR;CREGBEBBXXXX
+INTERBOLSA;Interbolsa S.A.;PT;Nationaler Zentralverwahrer Portugal;EUR;INBOLSPTXXXX
+ECIE;Euroclear Ireland;IE;Nationaler Zentralverwahrer Irland;EUR;EUCLEUBBIE1
+ESMI;Euronext Securities Milan (Monte Titoli);IT;Nationaler Zentralverwahrer Italien;EUR;MTITITMMXXXX
+VPC;Euronext Securities Oslo (Verdipapirsentralen);NO;Nationaler Zentralverwahrer Norwegen;NOK;VPSNNOKKXXXX
+CREST;Euroclear UK & International (CREST);GB;Nationaler Zentralverwahrer UK & Irland;GBP;EUCUKL21XXXX
+SIS;SIX SIS AG;CH;Nationaler und internationaler Verwahrer Schweiz;CHF;SISZCHZZXXXX
+IBERCLEAR;Iberclear;ES;Nationaler Zentralverwahrer Spanien;EUR;IBECCSMMXXXX
+KDPW;Krajowy Depozyt Papierów Wartościowych;PL;Nationaler Zentralverwahrer Polen;PLN;KDPWPLWARXXX
+OEKB;Oesterreichische Kontrollbank (OeKB CSD);AT;Nationaler Zentralverwahrer Österreich;EUR;OKBCOA22XXXX
+EOCFI;Euroclear Finland;FI;Nationaler Zentralverwahrer Finnland;EUR;APKFFIHHXXXX
+EOCDK;Euronext Securities Copenhagen;DK;Nationaler Zentralverwahrer Dänemark;DKK;VPCYDKKKXXXX
+EOCSE;Euroclear Sweden;SE;Nationaler Zentralverwahrer Schweden;SEK;VPCKSEMMXXXX
+JASDEC;Japan Securities Depository Center;JP;Nationaler Zentralverwahrer Japan (Aktien);JPY;JASDJPJTXXXX
+BOJ;Bank of Japan (JGB Book-Entry System);JP;Zentralverwahrer für japanische Staatsanleihen;JPY;BJAPJPJTXXXX
+CSDC_SH;China Securities Depository and Clearing (Shanghai);CN;Zentralverwahrer Shanghai;CNY;CSDCCNX1SHG
+CSDC_SZ;China Securities Depository and Clearing (Shenzhen);CN;Zentralverwahrer Shenzhen;CNY;CSDCCNX1SZX
+CCASS;Central Clearing and Settlement System;HK;Zentralverwahrer Hongkong (HKEX-Gruppe);HKD;HKEXHKHHXXXX
+NSDL;National Securities Depository Limited;IN;Zentralverwahrer Indien (NSE-fokussiert);INR;NSDLINBUMU1
+CDSL;Central Depository Services (India) Limited;IN;Zentralverwahrer Indien (BSE-fokussiert);INR;CDSLINBUMU1
+CDP;Central Depository (Pte) Limited;SG;Nationaler Zentralverwahrer Singapur;SGD;SGPXSGSGXXXX
+KSD;Korea Securities Depository;KR;Nationaler Zentralverwahrer Südkorea;KRW;KSDEKRSEXXXX
+TDCC;Taiwan Depository & Clearing Corporation;TW;Nationaler Zentralverwahrer Taiwan;TWD;TDCCCHTWXXXX
+CHESS;ASX Settlement (CHESS);AU;Nationaler Zentralverwahrer Australien;AUD;AUSXAU2SXXXX
+NZCSD;New Zealand Central Securities Depository;NZ;Nationaler Zentralverwahrer Neuseeland;NZD;RBNZNZWWXXXX
+B3_DEPO;B3 Central Depository;BR;Nationaler Zentralverwahrer Brasilien;BRL;BVMFBRSPXXXX
+INDEVAL;S.D. Indeval Institución para el Depósito de Valores;MX;Nationaler Zentralverwahrer Mexiko;MXN;INDVMXMMXXXX
+CRYL;Caja de Valores S.A.;AR;Nationaler Zentralverwahrer Argentinien;ARS;CAJADOBAXXXX
+DCV;Depósito Central de Valores;CL;Nationaler Zentralverwahrer Chile;CLP;DCVLCLSTXXXX
+EDAA;Edaa (Securities Depository Center Company);SA;Nationaler Zentralverwahrer Saudi-Arabien;SAR;EDAAZARIXXXX
+BCTS;Dubai Clear / Nasdaq Dubai Sulook;AE;Zentralverwahrer Dubai Financial Market;AED;DFMXAEXX|NQD
+ADX_CSD;Abu Dhabi Securities Exchange CSD;AE;Zentralverwahrer Abu Dhabi;AED;ADXGAA22XXXX
+TASE_CH;TASE Clearing House;IL;Nationaler Zentralverwahrer Israel;ILS;TUCHILTAXXXX
+STRATE;Strate Ltd;ZA;Nationaler Zentralverwahrer Südafrika;ZAR;STREZAJJXXXX
+MCDR;Misr for Central Clearing, Depository and Registry;EG;Nationaler Zentralverwahrer Ägypten;EGP;MCDREGCAXXXX

@@ -1,0 +1,55 @@
+﻿Boersenkuerzel;Boersenname;Lagerstellen_Kuerzel;Bemerkung_Prozess
+NYSE;New York Stock Exchange;DTC;Standardabwicklung für US-Aktien
+NYSE;New York Stock Exchange;FED;Abwicklung von US-Staatsanleihen an der NYSE Amex
+NASDAQ;Nasdaq Stock Market;DTC;Standardabwicklung für US-Tech-Aktien
+NASDAQ;Nasdaq Stock Market;FED;Abwicklung von US-Staatsanleihen
+AMEX;NYSE American;DTC;Standardabwicklung US-Small Caps
+TSX;Toronto Stock Exchange;CDS;Zentralisierte Abwicklung in Kanada
+FWB;Frankfurter Wertpapierbörse (Xetra);CBF;Zentraler Abwicklungskanal für deutsche Hauptwerte
+BWD;Börse Düsseldorf;CBF;Regionalplatz-Zuweisung an Clearstream Frankfurt
+XSTU;Börse Stuttgart;CBF;Regionalplatz-Zuweisung an Clearstream Frankfurt
+XMUN;Börse München;CBF;Regionalplatz-Zuweisung an Clearstream Frankfurt
+XBER;Börse Berlin;CBF;Regionalplatz-Zuweisung an Clearstream Frankfurt
+XHAM;Börse Hamburg;CBF;Regionalplatz-Zuweisung an Clearstream Frankfurt
+XHAN;Börse Hannover;CBF;Regionalplatz-Zuweisung an Clearstream Frankfurt
+XGAT;Tradegate Exchange;CBF;Elektronischer Retail-Verkehr über Clearstream Frankfurt
+EPA;Euronext Paris;ECFR;Lokale Verwahrung über Euroclear France
+AMS;Euronext Amsterdam;ECNL;Lokale Verwahrung über Euroclear Nederland
+BRU;Euronext Brussels;ECBE;Lokale Verwahrung über Euroclear Belgium
+ELI;Euronext Lisbon;INTERBOLSA;Abwicklung über portugiesische Interbolsa
+DUB;Euronext Dublin;ECIE;Euronext Dublin Abwicklungsroute via Euroclear
+MIL;Borsa Italiana (Euronext Milan);ESMI;Abwicklung über Euronext Securities Milan (Monte Titoli)
+OSL;Oslo Børs (Euronext Oslo);VPC;Abwicklung über Euronext Securities Oslo (VPS)
+LSE;London Stock Exchange;CREST;Standardabwicklung UK-Märkte
+LSE;London Stock Exchange;ECL;Internationale Handelssegmente laufen über Euroclear Bank
+SIX;SIX Swiss Exchange;SIS;Vollintegrierte Post-Trade-Infrastruktur über SIX SIS
+BME;Bolsas y Mercados Españoles (Madrid);IBERCLEAR;Zentralisierte spanische Abwicklung
+WSE;Warsaw Stock Exchange;KDPW;Zentralisierte polnische Abwicklung
+VSE;Vienna Stock Exchange;OEKB;Zentralisierte österreichische Abwicklung
+HEX;Nasdaq Helsinki;EOCFI;Verwahrung über Euroclear Finland
+CSE;Nasdaq Copenhagen;EOCDK;Verwahrung über Euronext Securities Copenhagen
+STO;Nasdaq Stockholm;EOCSE;Verwahrung über Euroclear Sweden
+TSE;Tokyo Stock Exchange;JASDEC;Verwahrung und Abrechnung von Aktien
+TSE;Tokyo Stock Exchange;BOJ;Verwahrung und Abwicklung japanischer Staatsanleihen (JGB)
+SSE;Shanghai Stock Exchange;CSDC_SH;Exklusive Zuweisung an CSDC Shanghai Branch
+SZSE;Shenzhen Stock Exchange;CSDC_SZ;Exklusive Zuweisung an CSDC Shenzhen Branch
+HKEX;Hong Kong Stock Exchange;CCASS;Inhouse-Zentralverwahrer der HKEX-Gruppe
+NSE;National Stock Exchange of India;NSDL;Wahlrecht: Primäre Anbindung an NSDL
+NSE;National Stock Exchange of India;CDSL;Wahlrecht: Sekundäre Anbindung an CDSL
+BSE;BSE India (Bombay Stock Exchange);CDSL;Wahlrecht: Primäre Anbindung an CDSL
+BSE;BSE India (Bombay Stock Exchange);NSDL;Wahlrecht: Sekundäre Anbindung an NSDL
+SGX;Singapore Exchange;CDP;Vollintegriertes Inhouse-Modell der SGX
+KRX;Korea Exchange;KSD;Zentralisierte Abwicklung Südkorea
+TWSE;Taiwan Stock Exchange;TDCC;Zentralisierte Abwicklung Taiwan
+ASX;Australian Securities Exchange;CHESS;Inhouse-System Clearing House Electronic Subregister System
+NZX;New Zealand Exchange;NZCSD;Abwicklung über Zentralbank-Infrastruktur
+B3;B3 - Brasil, Bolsa, Balcão;B3_DEPO;Inhouse-Verwahrung der B3-Gruppe
+BMV;Bolsa Mexicana de Valores;INDEVAL;Zentralisierter mexikanischer CSD
+BCBA;Bolsa de Comercio de Buenos Aires;CRYL;Zentralisierter argentinischer CSD
+BCS;Bolsa de Santiago;DCV;Zentralisierter chilenischer CSD
+TADAWUL;Saudi Exchange (Tadawul);EDAA;Volltochter der Tadawul Group
+DFM;Dubai Financial Market;BCTS;Abwicklung via Dubai Clear
+ADX;Abu Dhabi Securities Exchange;ADX_CSD;Inhouse-CSD der ADX
+TASE;Tel Aviv Stock Exchange;TASE_CH;Inhouse-Clearinghaus der TASE
+JSE;Johannesburg Stock Exchange;STRATE;Zentraler südafrikanischer CSD
+EGX;Egyptian Exchange;MCDR;Zentraler ägyptischer CSD

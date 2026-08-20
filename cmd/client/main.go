@@ -133,42 +133,49 @@ func (apiClient *ApiClient) GetCountries() error {
 	fmt.Println("** Countries", len(*resp.JSON200))
 	fmt.Println("*******************************************************************")
 
-	for idx, country := range *resp.JSON200 {
+	for _, country := range *resp.JSON200 {
 
-		fmt.Printf("%s, %s, %s\n", country.Id.String(), country.Shortcode, country.Name)
+		var ibanlength int16 = 0
 
-		newName := fmt.Sprintf("Name%d", idx)
-		newShortcode := fmt.Sprintf("%d", idx)
+		if country.Ibanlenth != nil {
 
-		body := CreateCustodianJSONRequestBody{
-			Depotno:   nil,
-			Flags:     0,
-			Idcountry: country.Id,
-			Name:      newName,
-			Shortcode: newShortcode,
+			ibanlength = *country.Ibanlenth
 		}
 
-		createResponse, err := apiClient.genClient.CreateCustodianWithResponse(ctx, body)
+		fmt.Printf("%s, %s, %s, %d, %d\n", country.Id.String(), country.Shortcode, country.Name, country.Flags, ibanlength)
+		/*
+			newName := fmt.Sprintf("Name%d", idx)
+			newShortcode := fmt.Sprintf("%d", idx)
 
-		if err != nil {
+			body := CreateCustodianJSONRequestBody{
+				Depotno:   nil,
+				Flags:     0,
+				Idcountry: country.Id,
+				Name:      newName,
+				Shortcode: newShortcode,
+			}
 
-			return fmt.Errorf("CreateCustodian: Server fehler mit status %w", err)
-		}
+			createResponse, err := apiClient.genClient.CreateCustodianWithResponse(ctx, body)
 
-		if createResponse.StatusCode() != http.StatusCreated {
+			if err != nil {
 
-			return fmt.Errorf("CreateCustodian: Server fehler mit status %d", createResponse.StatusCode())
-		}
+				return fmt.Errorf("CreateCustodian: Server fehler mit status %w", err)
+			}
+
+			if createResponse.StatusCode() != http.StatusCreated {
+
+				return fmt.Errorf("CreateCustodian: Server fehler mit status %d", createResponse.StatusCode())
+			}*/
 	}
 
 	return nil
 }
 
-func (apiClient *ApiClient) GetCustodians() error {
+func (apiClient *ApiClient) GetExchanges() error {
 
 	ctx := context.Background()
 
-	resp, err := apiClient.genClient.GetCustodiansWithResponse(ctx)
+	resp, err := apiClient.genClient.GetExchangesWithResponse(ctx)
 
 	if err != nil {
 
@@ -181,12 +188,48 @@ func (apiClient *ApiClient) GetCustodians() error {
 	}
 
 	fmt.Println("*******************************************************************")
-	fmt.Println("** Custodians", len(*resp.JSON200))
+	fmt.Println("** Exchanges", len(*resp.JSON200))
 	fmt.Println("*******************************************************************")
 
-	for _, custodian := range *resp.JSON200 {
+	for _, exchange := range *resp.JSON200 {
 
-		fmt.Printf("%s, %s, %s\n", custodian.Id.String(), custodian.Shortcode, custodian.Name)
+		fmt.Printf("%s, %s, %s, %d\n", exchange.Id.String(), exchange.Shortcode, exchange.Name, exchange.Flags)
+	}
+
+	return nil
+}
+
+func (apiClient *ApiClient) GetCustodians() error {
+
+	ctx := context.Background()
+
+	respcustodian, err := apiClient.genClient.GetCustodiansWithResponse(ctx)
+
+	if err != nil {
+
+		return fmt.Errorf("Netzwerkfehler: %w", err)
+	}
+
+	if respcustodian.JSON200 == nil {
+
+		return fmt.Errorf("Server fehler mit status %d", respcustodian.StatusCode())
+	}
+
+	fmt.Println("*******************************************************************")
+	fmt.Println("** Custodians", len(*respcustodian.JSON200))
+	fmt.Println("*******************************************************************")
+
+	for _, custodian := range *respcustodian.JSON200 {
+
+		responseCountry, err := apiClient.genClient.GetCountryByIdWithResponse(ctx, custodian.Idcountry)
+
+		if err == nil {
+
+			fmt.Printf("%s, %s, %s, %s\n", custodian.Id.String(), custodian.Shortcode, custodian.Name, responseCountry.JSON200.Shortcode)
+		} else {
+
+			fmt.Printf("%s, %s, %s, %s\n", custodian.Id.String(), custodian.Shortcode, custodian.Name, "???????????????????")
+		}
 	}
 
 	return nil
@@ -201,6 +244,11 @@ func main() {
 	}
 
 	if err := apiClient.GetCountries(); err != nil {
+
+		log.Println(err)
+	}
+
+	if err := apiClient.GetExchanges(); err != nil {
 
 		log.Println(err)
 	}
