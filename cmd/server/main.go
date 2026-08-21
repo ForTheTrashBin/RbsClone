@@ -77,7 +77,7 @@ func main() {
 	// Read content of .env-file into the 'local' environment of this proccess
 	//-------------------------------------------------------------------------
 
-	if err := config.InitGoDotEnv(); err != nil {
+	if err := config.InitGoDotEnv(); err != nil { // 'GoDotEnv' is an external package name "github.com/joho/godotenv"
 
 		panic(fmt.Errorf("Error from 'godotenv': %w", err))
 	}
@@ -86,7 +86,7 @@ func main() {
 	// Parse the content of the 'local' environmet into the Config-struct
 	//-------------------------------------------------------------------------
 
-	if err := config.InitCaarlos0(); err != nil {
+	if err := config.InitCaarlos0(); err != nil { // 'Caarlos0' is an external package name "github.com/caarlos0/env/v11"
 
 		panic(fmt.Errorf("Error from 'env': %w", err))
 	}
@@ -264,12 +264,16 @@ func main() {
 
 	//-------------------------------------------------------------------------
 
-	server1 := huma.Server{URL: "https://www.rbsclone.de:8443", Description: "The address of the magnificent RbsClone server"}
-	server2 := huma.Server{URL: "http://www.rbsclone.de:8080", Description: "The address of the magnificent RbsClone server (redirected to port 8443)"}
-
-	server := []*huma.Server{&server1, &server2}
-
-	humaConfig.OpenAPI.Servers = server
+	humaConfig.OpenAPI.Servers = []*huma.Server{
+		{
+			URL:         "https://www.rbsclone.de:8443",
+			Description: "The address of the magnificent RbsClone server",
+		},
+		/*	{
+			URL:         "http://www.rbsclone.de:8080",
+			Description: "The address of the magnificent RbsClone server (redirected to port 8443)",
+		},*/
+	}
 
 	//-------------------------------------------------------------------------
 

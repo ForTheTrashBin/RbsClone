@@ -33,7 +33,7 @@ type RTConfig struct {
 type Config struct {
 	DB       DBConfig   `envPrefix:"DB_"`
 	RT       RTConfig   `envPrefix:"RT_"`
-	LogLevel slog.Level `env:"LOGLEVEL" envDefault:"info"`
+	LogLevel slog.Level `env:"LOGLEVEL" envDefault:"warn"`
 }
 
 //-----------------------------------------------------------------------------
