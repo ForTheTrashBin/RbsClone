@@ -217,11 +217,54 @@ func main() {
 	// Create a listener to listen on the http port
 	//-------------------------------------------------------------------------
 
-	httpHandlerWrapper := NewHttpHandlerWrapper(config)
+	// httpHandlerWrapper := NewHttpHandlerWrapper(config)
+
+	humaConfigHTTP := huma.DefaultConfig("API for the magnificent Rbs-Clone", "0.1.0")
+
+	//-------------------------------------------------------------------------
+
+	humaConfigHTTP.OpenAPI.Info.Title = "API for the magnificent Rbs-Clone"
+	humaConfigHTTP.OpenAPI.Info.Version = "0.1.0"
+
+	humaConfigHTTP.OpenAPI.Info.Contact = &huma.Contact{
+		Email: "info@rbsclode.de",
+		Name:  "Your magnificent RbsClone support team",
+		URL:   "https://support.rbsclone.de",
+	}
+
+	humaConfigHTTP.OpenAPI.Info.Description = "This is a detailed description of RbsClone. RbsClone is the best program in the world!"
+
+	humaConfigHTTP.OpenAPI.Info.License = &huma.License{
+		Name: "Apache 2.0",
+		URL:  "https://www.apache.org/licenses/LICENSE-2.0.html",
+	}
+
+	//-------------------------------------------------------------------------
+
+	humaConfigHTTP.OpenAPI.Servers = []*huma.Server{
+		{
+			URL:         "http://www.rbsclone.de:8080",
+			Description: "The address of the magnificent RbsClone server",
+		},
+	}
+
+	//-------------------------------------------------------------------------
+
+	humaConfigHTTP.CreateHooks = nil
+
+	// humaConfigHTTP.DocsRenderer = huma.DocsRendererStoplightElements
+
+	//-------------------------------------------------------------------------
+
+	routerHTTP := http.NewServeMux()
+
+	apiHTTP := humago.New(routerHTTP, humaConfigHTTP)
+
+	rest.RegisterAllRoutes(logger, dbPool, apiHTTP)
 
 	serverHTTP := &http.Server{
 
-		Handler:           http.HandlerFunc(httpHandlerWrapper.httpHandler),
+		Handler:           routerHTTP, // http.HandlerFunc(httpHandlerWrapper.httpHandler),
 		Addr:              ":" + strconv.Itoa(int(config.GetHTTPPort())),
 		ReadTimeout:       3 * time.Second,
 		ReadHeaderTimeout: 3 * time.Second,
@@ -242,56 +285,52 @@ func main() {
 	// Create a listener to listen on the https port
 	//-------------------------------------------------------------------------
 
-	humaConfig := huma.DefaultConfig("API for the magnificent Rbs-Clone", "0.1.0")
+	humaConfigHTTPS := huma.DefaultConfig("API for the magnificent Rbs-Clone", "0.1.0")
 
 	//-------------------------------------------------------------------------
 
-	humaConfig.OpenAPI.Info.Title = "API for the magnificent Rbs-Clone"
-	humaConfig.OpenAPI.Info.Version = "0.1.0"
+	humaConfigHTTPS.OpenAPI.Info.Title = "API for the magnificent Rbs-Clone"
+	humaConfigHTTPS.OpenAPI.Info.Version = "0.1.0"
 
-	humaConfig.OpenAPI.Info.Contact = &huma.Contact{
+	humaConfigHTTPS.OpenAPI.Info.Contact = &huma.Contact{
 		Email: "info@rbsclode.de",
 		Name:  "Your magnificent RbsClone support team",
 		URL:   "https://support.rbsclone.de",
 	}
 
-	humaConfig.OpenAPI.Info.Description = "This is a detailed description of RbsClone. RbsClone is the best program in the world!"
+	humaConfigHTTPS.OpenAPI.Info.Description = "This is a detailed description of RbsClone. RbsClone is the best program in the world!"
 
-	humaConfig.OpenAPI.Info.License = &huma.License{
+	humaConfigHTTPS.OpenAPI.Info.License = &huma.License{
 		Name: "Apache 2.0",
 		URL:  "https://www.apache.org/licenses/LICENSE-2.0.html",
 	}
 
 	//-------------------------------------------------------------------------
 
-	humaConfig.OpenAPI.Servers = []*huma.Server{
+	humaConfigHTTPS.OpenAPI.Servers = []*huma.Server{
 		{
 			URL:         "https://www.rbsclone.de:8443",
 			Description: "The address of the magnificent RbsClone server",
 		},
-		/*	{
-			URL:         "http://www.rbsclone.de:8080",
-			Description: "The address of the magnificent RbsClone server (redirected to port 8443)",
-		},*/
 	}
 
 	//-------------------------------------------------------------------------
 
-	humaConfig.CreateHooks = nil
+	humaConfigHTTPS.CreateHooks = nil
 
 	// humaConfig.DocsRenderer = huma.DocsRendererStoplightElements
 
 	//-------------------------------------------------------------------------
 
-	router := http.NewServeMux()
+	routerHTTPS := http.NewServeMux()
 
-	api := humago.New(router, humaConfig)
+	apiHTTPS := humago.New(routerHTTPS, humaConfigHTTPS)
 
-	rest.RegisterAllRoutes(logger, dbPool, api)
+	rest.RegisterAllRoutes(logger, dbPool, apiHTTPS)
 
 	serverHTTPS := &http.Server{
 
-		Handler:           router, // myhandler, // http.HandlerFunc(myhandler), // http.HandlerFunc(httpsHandler),
+		Handler:           routerHTTPS,
 		Addr:              ":" + strconv.Itoa(int(config.GetHTTPSPort())),
 		ReadTimeout:       3 * time.Second,
 		ReadHeaderTimeout: 3 * time.Second,

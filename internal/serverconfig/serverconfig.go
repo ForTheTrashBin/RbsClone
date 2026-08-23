@@ -1,7 +1,9 @@
 package serverconfig
 
 import (
+	"errors"
 	"log/slog"
+	"os"
 
 	"github.com/caarlos0/env/v11"
 	"github.com/joho/godotenv"
@@ -20,7 +22,7 @@ type DBConfig struct {
 }
 
 //-----------------------------------------------------------------------------
-// Configuration for tzhe routers and http(s) servers
+// Configuration for the routers and http(s) servers
 //-----------------------------------------------------------------------------
 
 type RTConfig struct {
@@ -42,7 +44,15 @@ type Config struct {
 
 func (cfg *Config) InitGoDotEnv() error {
 
-	return godotenv.Load()
+	if err := godotenv.Load(); err != nil {
+
+		if !errors.Is(err, os.ErrNotExist) {
+
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (cfg *Config) InitCaarlos0() error {
