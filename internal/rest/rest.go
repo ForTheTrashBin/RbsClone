@@ -1,8 +1,10 @@
 package rest
 
 import (
+	"context"
 	"errors"
 	"log/slog"
+	"net/http"
 
 	"github.com/ForTheTrashBin/RbsClone/internal/rbsdb"
 	"github.com/danielgtaylor/huma/v2"
@@ -32,10 +34,51 @@ func RegisterAllRoutes(logger *slog.Logger, dbPool *pgxpool.Pool, dbQueries *rbs
 		api:       api,
 	}
 
+	restServer.registerUtilities()
+
 	restServer.registerCountryRoutes()
 	restServer.registerCustodianRoutes()
 	restServer.registerExchangeRoutes()
 	restServer.registerCustodian2ExchangeRoutes()
+}
+
+//-----------------------------------------------------------------------------
+
+func (rs *RestServer) registerUtilities() {
+
+	huma.Register(rs.api, huma.Operation{
+		OperationID:   "get-ping",
+		Method:        http.MethodGet,
+		Path:          "/ping",
+		Summary:       "Connection-Test",
+		Description:   "Test of the connection to this server",
+		Tags:          []string{"Utilities"},
+		DefaultStatus: http.StatusOK,
+	}, func(ctx context.Context, request *struct{}) (*struct{}, error) {
+
+		return nil, nil
+	})
+
+	huma.Register(rs.api, huma.Operation{
+		OperationID:   "get-health",
+		Method:        http.MethodGet,
+		Path:          "/health",
+		Summary:       "State of services and components (Health)",
+		Description:   "Check the state of services and components",
+		Tags:          []string{"Utilities"},
+		DefaultStatus: http.StatusOK,
+	}, func(ctx context.Context, request *struct{}) (*struct{}, error) {
+
+		if err := rs.dbPool.Ping(ctx); err != nil {
+
+			rs.logger.ErrorContext(ctx, "DB-Pingtest", "error", err)
+
+			return nil, huma.Error503ServiceUnavailable("")
+		} else {
+
+			return nil, nil
+		}
+	})
 }
 
 //-----------------------------------------------------------------------------
