@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"net/http"
 
 	"github.com/ForTheTrashBin/RbsClone/internal/rbsdb"
 	"github.com/danielgtaylor/huma/v2"
@@ -12,6 +11,21 @@ import (
 )
 
 //-----------------------------------------------------------------------------
+//
+//	GET		Get List 			"/exchange"
+//	GET		Get by Id			"/exchange/id/{id}"
+//	GET		Get by Shortcode	"/exchange/shortcode/{shortcode}"
+//	POST	Create				"/exchange"
+//	DELETE	Delete				"/exchange/{id}"
+//	PUT		Update				"/exchange/{id}"
+//
+//-----------------------------------------------------------------------------
+
+type ExchangeListItem struct {
+	Id        uuid.UUID `json:"id" format:"uuid" doc:"This is the unique identifier a this data"`
+	Shortcode string    `json:"shortcode" minLength:"1" maxLength:"8" doc:"A unique short name for this data"`
+	Name      string    `json:"name" minLength:"1" maxLength:"80" doc:"A longer more descriptive description of this data"`
+}
 
 type ExchangeNoPK struct {
 	Shortcode string `json:"shortcode" minLength:"1" maxLength:"8" doc:"A unique short name for this data"`
@@ -52,129 +66,102 @@ type ExchangeResponse struct {
 	Body Exchange
 }
 
-type ExchangesResponse struct {
-	Body []Exchange
+type ExchangeListResponse struct {
+	Body []ExchangeListItem
 }
 
 //-----------------------------------------------------------------------------
 
 func (rs *RestServer) registerExchangeRoutes() {
 
-	huma.Register(rs.api, huma.Operation{
-		Tags:        []string{"Exchange"},
-		OperationID: "getExchanges",
-		Summary:     "Get a list of all exchanges",
-		Description: "Get a list of all exchanges",
-		Method:      http.MethodGet,
-		Path:        "/exchanges",
-	}, func(ctx context.Context, input *struct{}) (*ExchangesResponse, error) {
+	group := huma.NewGroup(rs.api, "/exchange")
 
-		rs.logger.Info("GetExchanges")
+	group.UseModifier(func(op *huma.Operation, next func(*huma.Operation)) {
 
-		queries := rbsdb.New(rs.db)
+		op.Tags = append(op.Tags, "Exchange")
 
-		dbSlice, err := queries.GetExchanges(ctx)
-
-		if err != nil {
-
-			rs.logger.Error("ListExchanges", "error", err)
-
-			return nil, mapDBError(err)
-		}
-
-		result := make([]Exchange, len(dbSlice))
-
-		for idx, dbData := range dbSlice {
-
-			result[idx] = mapDB2APIExchange(dbData)
-		}
-
-		return &ExchangesResponse{Body: result}, nil
-	})
-
-	huma.Register(rs.api, huma.Operation{
-		Tags:        []string{"Exchange"},
-		OperationID: "getExchangeById",
-		Summary:     "Get a single exchange based on the id supplied",
-		Description: "Get a single exchange based on the id supplied",
-		Method:      http.MethodGet,
-		Path:        "/exchange/id/{id}",
-	}, func(ctx context.Context, request *ExchangeRequestId) (*ExchangeResponse, error) {
-
-		rs.logger.Info("GetExchangeById", "Id", request.Id)
-
-		queries := rbsdb.New(rs.db)
-
-		dbresult, err := queries.GetExchangeByID(ctx, request.Id)
-
-		if err != nil {
-
-			if errors.Is(err, sql.ErrNoRows) {
-
-				return nil, huma.Error404NotFound("No data found")
-
-			} else {
-
-				rs.logger.Error("ReadExchangeById", "error", err)
-
-				return nil, mapDBError(err)
-			}
-		}
-
-		exchange := mapDB2APIExchange(dbresult)
-
-		return &ExchangeResponse{Body: exchange}, nil
-	})
-
-	huma.Register(rs.api, huma.Operation{
-		Tags:        []string{"Exchange"},
-		OperationID: "getExchangeByShortcode",
-		Summary:     "Get a single exchange based on the shortcode supplied",
-		Description: "Get a single exchange based on the shortcode supplied",
-		Method:      http.MethodGet,
-		Path:        "/exchange/shortcode/{shortcode}",
-	}, func(ctx context.Context, request *ExchangeRequestShortcode) (*ExchangeResponse, error) {
-
-		rs.logger.Info("GetExchangeByShortcode", "Shortcode", request.Shortcode)
-
-		queries := rbsdb.New(rs.db)
-
-		dbresult, err := queries.GetExchangeByShortcode(ctx, request.Shortcode)
-
-		if err != nil {
-
-			if errors.Is(err, sql.ErrNoRows) {
-
-				return nil, huma.Error404NotFound("No data found")
-
-			} else {
-
-				rs.logger.Error("ReadExchangeById", "error", err)
-
-				return nil, mapDBError(err)
-			}
-		}
-
-		exchange := mapDB2APIExchange(dbresult)
-
-		return &ExchangeResponse{Body: exchange}, nil
+		next(op)
 	})
 
 	//-------------------------------------------------------------------------
 
-	huma.Register(rs.api, huma.Operation{
-		Tags:          []string{"Exchange"},
-		OperationID:   "createExchange",
-		Summary:       "Create a new exchange",
-		Description:   "Create a new exchange",
-		Method:        http.MethodPost,
-		Path:          "/exchange",
-		DefaultStatus: http.StatusCreated,
-	}, func(ctx context.Context, request *ExchangeRequestCreate) (*ExchangeResponseCreate, error) {
+	huma.Get(group, "", func(ctx context.Context, request *struct{}) (*ExchangeListResponse, error) {
 
-		rs.logger.Info("CreateExchange")
+		dbSlice, err := rs.dbQueries.GetExchanges(ctx)
 
-		queries := rbsdb.New(rs.db)
+		if err != nil {
+
+			rs.logger.ErrorContext(ctx, "ListExchanges", "error", err)
+
+			return nil, mapDBError(err)
+		}
+
+		result := make([]ExchangeListItem, len(dbSlice))
+
+		for idx, dbData := range dbSlice {
+
+			result[idx] = mapDB2APIExchangeListItem(dbData)
+		}
+
+		return &ExchangeListResponse{Body: result}, nil
+
+	}, describeEndpoint("getExchanges", "Get a list of all exchanges"))
+
+	//-------------------------------------------------------------------------
+
+	huma.Get(group, "/id/{id}", func(ctx context.Context, request *ExchangeRequestId) (*ExchangeResponse, error) {
+
+		dbresult, err := rs.dbQueries.GetExchangeByID(ctx, request.Id)
+
+		if err != nil {
+
+			if errors.Is(err, sql.ErrNoRows) {
+
+				return nil, huma.Error404NotFound("No data found")
+
+			} else {
+
+				rs.logger.ErrorContext(ctx, "ReadExchangeById", "error", err)
+
+				return nil, mapDBError(err)
+			}
+		}
+
+		exchange := mapDB2APIExchange(dbresult)
+
+		return &ExchangeResponse{Body: exchange}, nil
+
+	}, describeEndpoint("getExchangeById", "Get a single exchange based on the id supplied"))
+
+	//-------------------------------------------------------------------------
+
+	huma.Get(group, "/shortcode/{shortcode}", func(ctx context.Context, request *ExchangeRequestShortcode) (*ExchangeResponse, error) {
+
+		dbresult, err := rs.dbQueries.GetExchangeByShortcode(ctx, request.Shortcode)
+
+		if err != nil {
+
+			if errors.Is(err, sql.ErrNoRows) {
+
+				return nil, huma.Error404NotFound("No data found")
+
+			} else {
+
+				rs.logger.ErrorContext(ctx, "ReadExchangeById", "error", err)
+
+				return nil, mapDBError(err)
+			}
+		}
+
+		exchange := mapDB2APIExchange(dbresult)
+
+		return &ExchangeResponse{Body: exchange}, nil
+
+	}, describeEndpoint("getExchangeByShortcode", "Get a single exchange based on the shortcode supplied"))
+
+	//-------------------------------------------------------------------------
+
+	huma.Post(group, "", func(ctx context.Context, request *ExchangeRequestCreate) (*ExchangeResponseCreate, error) {
 
 		insertParams := rbsdb.InsertExchangeParams{
 
@@ -183,39 +170,28 @@ func (rs *RestServer) registerExchangeRoutes() {
 			Flags:     request.Body.Flags,
 		}
 
-		result, err := queries.InsertExchange(ctx, insertParams)
+		result, err := rs.dbQueries.InsertExchange(ctx, insertParams)
 
 		if err != nil {
 
-			rs.logger.Error("CreateExchange", "error", err)
+			rs.logger.ErrorContext(ctx, "CreateExchange", "error", err)
 
 			return nil, mapDBError(err)
 		}
 
 		return &ExchangeResponseCreate{Id: result}, nil
-	})
+
+	}, describeEndpoint("createExchange", "Create a new exchange"))
 
 	//-------------------------------------------------------------------------
 
-	huma.Register(rs.api, huma.Operation{
-		Tags:          []string{"Exchange"},
-		OperationID:   "deleteExchange",
-		Summary:       "Delete a single exchange based on the id supplied",
-		Description:   "Delete a single exchange based on the id supplied",
-		Method:        http.MethodDelete,
-		Path:          "/exchange/{id}",
-		DefaultStatus: http.StatusNoContent,
-	}, func(ctx context.Context, request *ExchangeRequestId) (*struct{}, error) {
+	huma.Delete(group, "/{id}", func(ctx context.Context, request *ExchangeRequestId) (*struct{}, error) {
 
-		rs.logger.Info("DeleteExchange", "Id", request.Id)
-
-		queries := rbsdb.New(rs.db)
-
-		result, err := queries.DeleteExchange(ctx, request.Id)
+		result, err := rs.dbQueries.DeleteExchange(ctx, request.Id)
 
 		if err != nil {
 
-			rs.logger.Error("DeleteExchange", "error", err)
+			rs.logger.ErrorContext(ctx, "DeleteExchange", "error", err)
 
 			return nil, mapDBError(err)
 		}
@@ -226,23 +202,12 @@ func (rs *RestServer) registerExchangeRoutes() {
 		}
 
 		return nil, nil
-	})
+
+	}, describeEndpoint("deleteExchange", "Delete a single exchange based on the id supplied"))
 
 	//-------------------------------------------------------------------------
 
-	huma.Register(rs.api, huma.Operation{
-		Tags:          []string{"Exchange"},
-		OperationID:   "updateExchange",
-		Summary:       "Update an existing exchange based on the id supplied",
-		Description:   "Update an existing exchange based on the id supplied",
-		Method:        http.MethodPut,
-		Path:          "/exchange/{id}",
-		DefaultStatus: http.StatusOK,
-	}, func(ctx context.Context, request *ExchangeRequestUpdate) (*struct{}, error) {
-
-		rs.logger.Info("UpdateExchange", "Id", request.Id)
-
-		queries := rbsdb.New(rs.db)
+	huma.Put(group, "/{id}", func(ctx context.Context, request *ExchangeRequestUpdate) (*struct{}, error) {
 
 		updateParams := rbsdb.UpdateExchangeParams{
 
@@ -252,11 +217,11 @@ func (rs *RestServer) registerExchangeRoutes() {
 			Flags:      request.Body.Flags,
 		}
 
-		result, err := queries.UpdateExchange(ctx, updateParams)
+		result, err := rs.dbQueries.UpdateExchange(ctx, updateParams)
 
 		if err != nil {
 
-			rs.logger.Error("UpdateExchange", "error", err)
+			rs.logger.ErrorContext(ctx, "UpdateExchange", "error", err)
 
 			return nil, mapDBError(err)
 		}
@@ -267,10 +232,21 @@ func (rs *RestServer) registerExchangeRoutes() {
 		}
 
 		return nil, nil
-	})
+
+	}, describeEndpoint("updateExchange", "Update an existing exchange based on the id supplied"))
 }
 
 //-----------------------------------------------------------------------------
+
+func mapDB2APIExchangeListItem(record rbsdb.Exchange) ExchangeListItem {
+
+	return ExchangeListItem{
+
+		Id:        record.Idexchange,
+		Shortcode: record.Shortcode,
+		Name:      record.Name,
+	}
+}
 
 func mapDB2APIExchange(record rbsdb.Exchange) Exchange {
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"net/http"
 
 	"github.com/ForTheTrashBin/RbsClone/internal/rbsdb"
 	"github.com/danielgtaylor/huma/v2"
@@ -12,6 +11,21 @@ import (
 )
 
 //-----------------------------------------------------------------------------
+//
+//	GET		Get List 			"/country"
+//	GET		Get by Id			"/country/id/{id}"
+//	GET		Get by Shortcode	"/country/shortcode/{shortcode}"
+//	POST	Create				"/country"
+//	DELETE	Delete				"/country/{id}"
+//	PUT		Update				"/country/{id}"
+//
+//-----------------------------------------------------------------------------
+
+type CountryListItem struct {
+	Id        uuid.UUID `json:"id" format:"uuid" doc:"This is the unique identifier a this data"`
+	Shortcode string    `json:"shortcode" minLength:"2" maxLength:"2" doc:"A unique short name for this data"`
+	Name      string    `json:"name" minLength:"1" maxLength:"30" doc:"A longer more descriptive description of this data"`
+}
 
 type CountryNoPK struct {
 	Shortcode  string `json:"shortcode" minLength:"2" maxLength:"2" doc:"A unique short name for this data"`
@@ -55,129 +69,102 @@ type CountryResponse struct {
 	Body Country
 }
 
-type CountriesResponse struct {
-	Body []Country
+type CountryListResponse struct {
+	Body []CountryListItem
 }
 
 //-----------------------------------------------------------------------------
 
 func (rs *RestServer) registerCountryRoutes() {
 
-	huma.Register(rs.api, huma.Operation{
-		Tags:        []string{"Country"},
-		OperationID: "getCountries",
-		Summary:     "Get a list of all countries",
-		Description: "Get a list of all countries",
-		Method:      http.MethodGet,
-		Path:        "/countries",
-	}, func(ctx context.Context, input *struct{}) (*CountriesResponse, error) {
+	group := huma.NewGroup(rs.api, "/country")
 
-		rs.logger.Info("GetCountries")
+	group.UseModifier(func(op *huma.Operation, next func(*huma.Operation)) {
 
-		queries := rbsdb.New(rs.db)
+		op.Tags = append(op.Tags, "Country")
 
-		dbSlice, err := queries.GetCountries(ctx)
-
-		if err != nil {
-
-			rs.logger.Error("ListCountries", "error", err)
-
-			return nil, mapDBError(err)
-		}
-
-		result := make([]Country, len(dbSlice))
-
-		for idx, dbData := range dbSlice {
-
-			result[idx] = mapDB2APICountry(dbData)
-		}
-
-		return &CountriesResponse{Body: result}, nil
-	})
-
-	huma.Register(rs.api, huma.Operation{
-		Tags:        []string{"Country"},
-		OperationID: "getCountryById",
-		Summary:     "Get a single country based on the id supplied",
-		Description: "Get a single country based on the id supplied",
-		Method:      http.MethodGet,
-		Path:        "/country/id/{id}",
-	}, func(ctx context.Context, request *CountryRequestId) (*CountryResponse, error) {
-
-		rs.logger.Info("GetCountryById", "Id", request.Id)
-
-		queries := rbsdb.New(rs.db)
-
-		dbresult, err := queries.GetCountryByID(ctx, request.Id)
-
-		if err != nil {
-
-			if errors.Is(err, sql.ErrNoRows) {
-
-				return nil, huma.Error404NotFound("No data found")
-
-			} else {
-
-				rs.logger.Error("ReadCountryById", "error", err)
-
-				return nil, mapDBError(err)
-			}
-		}
-
-		country := mapDB2APICountry(dbresult)
-
-		return &CountryResponse{Body: country}, nil
-	})
-
-	huma.Register(rs.api, huma.Operation{
-		Tags:        []string{"Country"},
-		OperationID: "getCountryByShortcode",
-		Summary:     "Get a single country based on the shortcode supplied",
-		Description: "Get a single country based on the shortcode supplied",
-		Method:      http.MethodGet,
-		Path:        "/country/shortcode/{shortcode}",
-	}, func(ctx context.Context, request *CountryRequestShortcode) (*CountryResponse, error) {
-
-		rs.logger.Info("GetCountryByShortcode", "Shortcode", request.Shortcode)
-
-		queries := rbsdb.New(rs.db)
-
-		dbresult, err := queries.GetCountryByShortcode(ctx, request.Shortcode)
-
-		if err != nil {
-
-			if errors.Is(err, sql.ErrNoRows) {
-
-				return nil, huma.Error404NotFound("No data found")
-
-			} else {
-
-				rs.logger.Error("ReadCountryById", "error", err)
-
-				return nil, mapDBError(err)
-			}
-		}
-
-		country := mapDB2APICountry(dbresult)
-
-		return &CountryResponse{Body: country}, nil
+		next(op)
 	})
 
 	//-------------------------------------------------------------------------
 
-	huma.Register(rs.api, huma.Operation{
-		Tags:          []string{"Country"},
-		OperationID:   "createCountry",
-		Summary:       "Create a new country",
-		Description:   "Create a new country",
-		Method:        http.MethodPost,
-		Path:          "/country",
-		DefaultStatus: http.StatusCreated,
-	}, func(ctx context.Context, request *CountryRequestCreate) (*CountryResponseCreate, error) {
+	huma.Get(group, "", func(ctx context.Context, request *struct{}) (*CountryListResponse, error) {
 
-		rs.logger.Info("CreateCountry")
+		dbSlice, err := rs.dbQueries.GetCountries(ctx)
 
-		queries := rbsdb.New(rs.db)
+		if err != nil {
+
+			rs.logger.ErrorContext(ctx, "ListCountries", "error", err)
+
+			return nil, mapDBError(err)
+		}
+
+		result := make([]CountryListItem, len(dbSlice))
+
+		for idx, dbData := range dbSlice {
+
+			result[idx] = mapDB2APICountryListItem(dbData)
+		}
+
+		return &CountryListResponse{Body: result}, nil
+
+	}, describeEndpoint("getCountries", "Get a list of all countries"))
+
+	//-------------------------------------------------------------------------
+
+	huma.Get(group, "/id/{id}", func(ctx context.Context, request *CountryRequestId) (*CountryResponse, error) {
+
+		dbresult, err := rs.dbQueries.GetCountryByID(ctx, request.Id)
+
+		if err != nil {
+
+			if errors.Is(err, sql.ErrNoRows) {
+
+				return nil, huma.Error404NotFound("No data found")
+
+			} else {
+
+				rs.logger.ErrorContext(ctx, "ReadCountryById", "error", err)
+
+				return nil, mapDBError(err)
+			}
+		}
+
+		country := mapDB2APICountry(dbresult)
+
+		return &CountryResponse{Body: country}, nil
+
+	}, describeEndpoint("getCountryById", "Get a single country based on the id supplied"))
+
+	//-------------------------------------------------------------------------
+
+	huma.Get(group, "/shortcode/{shortcode}", func(ctx context.Context, request *CountryRequestShortcode) (*CountryResponse, error) {
+
+		dbresult, err := rs.dbQueries.GetCountryByShortcode(ctx, request.Shortcode)
+
+		if err != nil {
+
+			if errors.Is(err, sql.ErrNoRows) {
+
+				return nil, huma.Error404NotFound("No data found")
+
+			} else {
+
+				rs.logger.ErrorContext(ctx, "ReadCountryById", "error", err)
+
+				return nil, mapDBError(err)
+			}
+		}
+
+		country := mapDB2APICountry(dbresult)
+
+		return &CountryResponse{Body: country}, nil
+
+	}, describeEndpoint("getCountryByShortcode", "Get a single country based on the shortcode supplied"))
+
+	//-------------------------------------------------------------------------
+
+	huma.Post(group, "", func(ctx context.Context, request *CountryRequestCreate) (*CountryResponseCreate, error) {
 
 		insertParams := rbsdb.InsertCountryParams{
 
@@ -188,39 +175,28 @@ func (rs *RestServer) registerCountryRoutes() {
 			Risktype:   request.Body.Risktype,
 		}
 
-		result, err := queries.InsertCountry(ctx, insertParams)
+		result, err := rs.dbQueries.InsertCountry(ctx, insertParams)
 
 		if err != nil {
 
-			rs.logger.Error("CreateCountry", "error", err)
+			rs.logger.ErrorContext(ctx, "CreateCountry", "error", err)
 
 			return nil, mapDBError(err)
 		}
 
 		return &CountryResponseCreate{Id: result}, nil
-	})
+
+	}, describeEndpoint("createCountry", "Create a new country"))
 
 	//-------------------------------------------------------------------------
 
-	huma.Register(rs.api, huma.Operation{
-		Tags:          []string{"Country"},
-		OperationID:   "deleteCountry",
-		Summary:       "Delete a single country based on the id supplied",
-		Description:   "Delete a single country based on the id supplied",
-		Method:        http.MethodDelete,
-		Path:          "/country/{id}",
-		DefaultStatus: http.StatusNoContent,
-	}, func(ctx context.Context, request *CountryRequestId) (*struct{}, error) {
+	huma.Delete(group, "/{id}", func(ctx context.Context, request *CountryRequestId) (*struct{}, error) {
 
-		rs.logger.Info("DeleteCountry", "Id", request.Id)
-
-		queries := rbsdb.New(rs.db)
-
-		result, err := queries.DeleteCountry(ctx, request.Id)
+		result, err := rs.dbQueries.DeleteCountry(ctx, request.Id)
 
 		if err != nil {
 
-			rs.logger.Error("DeleteCountry", "error", err)
+			rs.logger.ErrorContext(ctx, "DeleteCountry", "error", err)
 
 			return nil, mapDBError(err)
 		}
@@ -231,23 +207,12 @@ func (rs *RestServer) registerCountryRoutes() {
 		}
 
 		return nil, nil
-	})
+
+	}, describeEndpoint("deleteCountry", "Delete a single country based on the id supplied"))
 
 	//-------------------------------------------------------------------------
 
-	huma.Register(rs.api, huma.Operation{
-		Tags:          []string{"Country"},
-		OperationID:   "updateCountry",
-		Summary:       "Update an existing country based on the id supplied",
-		Description:   "Update an existing country based on the id supplied",
-		Method:        http.MethodPut,
-		Path:          "/country/{id}",
-		DefaultStatus: http.StatusOK,
-	}, func(ctx context.Context, request *CountryRequestUpdate) (*struct{}, error) {
-
-		rs.logger.Info("UpdateCountry", "Id", request.Id)
-
-		queries := rbsdb.New(rs.db)
+	huma.Put(group, "/{id}", func(ctx context.Context, request *CountryRequestUpdate) (*struct{}, error) {
 
 		updateParams := rbsdb.UpdateCountryParams{
 
@@ -259,11 +224,11 @@ func (rs *RestServer) registerCountryRoutes() {
 			Risktype:   request.Body.Risktype,
 		}
 
-		result, err := queries.UpdateCountry(ctx, updateParams)
+		result, err := rs.dbQueries.UpdateCountry(ctx, updateParams)
 
 		if err != nil {
 
-			rs.logger.Error("UpdateCountry", "error", err)
+			rs.logger.ErrorContext(ctx, "UpdateCountry", "error", err)
 
 			return nil, mapDBError(err)
 		}
@@ -274,10 +239,21 @@ func (rs *RestServer) registerCountryRoutes() {
 		}
 
 		return nil, nil
-	})
+
+	}, describeEndpoint("updateCountry", "Update an existing country based on the id supplied"))
 }
 
 //-----------------------------------------------------------------------------
+
+func mapDB2APICountryListItem(record rbsdb.Country) CountryListItem {
+
+	return CountryListItem{
+
+		Id:        record.Idcountry,
+		Shortcode: record.Shortcode,
+		Name:      record.Name,
+	}
+}
 
 func mapDB2APICountry(record rbsdb.Country) Country {
 

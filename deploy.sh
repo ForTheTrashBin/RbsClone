@@ -16,5 +16,9 @@ docker run -d \
     -p 8080:8080 \
     -p 8443:8443 \
     --restart unless-stopped \
+    -e DB_USER=postgres \
+    -e DB_PASSWORD=????? \
+    -e DB_HOST=192.168.122.229 \
+    -e DB_DATABASE=my_database \
     -e LOGLEVEL=INFO \
     rbsclone:latest

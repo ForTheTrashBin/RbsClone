@@ -4,13 +4,19 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"net/http"
 
 	"github.com/ForTheTrashBin/RbsClone/internal/rbsdb"
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/google/uuid"
 )
 
+//-----------------------------------------------------------------------------
+//
+//	GET		Get by IdCustodian	"/custodian2exchange/idcustodian/{idcustodian}"
+//	GET		Get by IdExchange	"/custodian2exchange/idexchange/{idexchange}"
+//	PUT		Update				"/custodian2exchange/idcustodian/{idcustodian}"
+//	PUT		Update				"/custodian2exchange/idexchange/{idexchange}"
+//
 //-----------------------------------------------------------------------------
 
 type Custodian2ExchangeNoPK struct {
@@ -71,20 +77,20 @@ type Custodian2ExchangeResponse struct {
 
 func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
-	huma.Register(rs.api, huma.Operation{
-		Tags:        []string{"Custodian2Exchange"},
-		OperationID: "getCustodian2ExchangeByIdCustodian",
-		Summary:     "Get a list of all mappings by idcustodian supplied",
-		Description: "Get a list of all mappings by idcustodian supplied",
-		Method:      http.MethodGet,
-		Path:        "/custodian2exchange/idcustodian/{idcustodian}",
-	}, func(ctx context.Context, request *Custodian2ExchangeRequestIdCustodian) (*Custodian2ExchangeResponse, error) {
+	group := huma.NewGroup(rs.api, "/custodian2exchange")
 
-		rs.logger.Info("GetCustodian2ExchangeByIdCustodian", "IdCustodian", request.Idcustodian)
+	group.UseModifier(func(op *huma.Operation, next func(*huma.Operation)) {
 
-		queries := rbsdb.New(rs.db)
+		op.Tags = append(op.Tags, "Custodian2Exchange")
 
-		dbSlice, err := queries.GetCustodian2ExchangeByIdCustodian(ctx, request.Idcustodian)
+		next(op)
+	})
+
+	//-------------------------------------------------------------------------
+
+	huma.Get(group, "/idcustodian/{idcustodian}", func(ctx context.Context, request *Custodian2ExchangeRequestIdCustodian) (*Custodian2ExchangeResponse, error) {
+
+		dbSlice, err := rs.dbQueries.GetCustodian2ExchangeByIdCustodian(ctx, request.Idcustodian)
 
 		if err != nil {
 
@@ -94,7 +100,7 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 			} else {
 
-				rs.logger.Error("ReadCustodian2ExchangeById", "error", err)
+				rs.logger.ErrorContext(ctx, "ReadCustodian2ExchangeById", "error", err)
 
 				return nil, mapDBError(err)
 			}
@@ -108,22 +114,14 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 		}
 
 		return &Custodian2ExchangeResponse{Body: result}, nil
-	})
 
-	huma.Register(rs.api, huma.Operation{
-		Tags:        []string{"Custodian2Exchange"},
-		OperationID: "getCustodian2ExchangeByIdExchange",
-		Summary:     "Get a list of mappings by idexchange supplied",
-		Description: "Get a list of mappings by idexchange supplied",
-		Method:      http.MethodGet,
-		Path:        "/custodian2exchange/idexchange/{idexchange}",
-	}, func(ctx context.Context, request *Custodian2ExchangeRequestIdExchange) (*Custodian2ExchangeResponse, error) {
+	}, describeEndpoint("getCustodian2ExchangeByIdCustodian", "Get a list of all mappings by idcustodian supplied"))
 
-		rs.logger.Info("GetCustodian2ExchangeByIdExchange", "IdExchange", request.Idexchange)
+	//-------------------------------------------------------------------------
 
-		queries := rbsdb.New(rs.db)
+	huma.Get(group, "/idexchange/{idexchange}", func(ctx context.Context, request *Custodian2ExchangeRequestIdExchange) (*Custodian2ExchangeResponse, error) {
 
-		dbSlice, err := queries.GetCustodian2ExchangeByIdExchange(ctx, request.Idexchange)
+		dbSlice, err := rs.dbQueries.GetCustodian2ExchangeByIdExchange(ctx, request.Idexchange)
 
 		if err != nil {
 
@@ -133,7 +131,7 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 			} else {
 
-				rs.logger.Error("ReadCustodian2ExchangeById", "error", err)
+				rs.logger.ErrorContext(ctx, "ReadCustodian2ExchangeById", "error", err)
 
 				return nil, mapDBError(err)
 			}
@@ -147,166 +145,25 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 		}
 
 		return &Custodian2ExchangeResponse{Body: result}, nil
-	})
+
+	}, describeEndpoint("getCustodian2ExchangeByIdExchange", "Get a list of all mappings by idexchange supplied"))
 
 	//-------------------------------------------------------------------------
 
-	huma.Register(rs.api, huma.Operation{
-		Tags:          []string{"Custodian2Exchange"},
-		OperationID:   "mapCustodians2Exchange",
-		Summary:       "Modify the mapping of multiple custodians to a single exchange",
-		Description:   "Modify the mapping of multiple custodians to a single exchange",
-		Method:        http.MethodPost,
-		Path:          "/custodian2exchange/{idexchange}",
-		DefaultStatus: http.StatusCreated,
-	}, func(ctx context.Context, request *MapCustodian2ExchangeRequestIdExchange) (*struct{}, error) {
+	huma.Put(group, "/idcustodian/{idcustodian}", func(ctx context.Context, request *MapCustodian2ExchangeRequestIdCustodian) (*struct{}, error) {
 
-		rs.logger.Info("MapCustodian2ExchangeRequestIdExchange")
-
-		tx, err := rs.db.Begin(ctx)
+		tx, err := rs.dbPool.Begin(ctx)
 
 		if err != nil {
 
-			rs.logger.Error("MapCustodian2ExchangeRequestIdExchange", "error", err)
+			rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdCustodian", "error", err)
 
 			return nil, mapDBError(err)
 		}
 
 		defer tx.Rollback(ctx)
 
-		queries := rbsdb.New(tx)
-
-		//---------------------------------------------------------------------
-		// Step A: Load the current status from the database
-		//---------------------------------------------------------------------
-
-		dbSlice, err := queries.GetCustodian2ExchangeByIdExchange(ctx, request.Idexchange)
-
-		if err != nil {
-
-			rs.logger.Error("MapCustodian2ExchangeRequestIdExchange", "error", err)
-
-			return nil, huma.Error500InternalServerError("Internal server error")
-		}
-
-		//---------------------------------------------------------------------
-
-		dbMap := make(map[uuid.UUID]rbsdb.Custodian2exchange)
-
-		for _, dbRecord := range dbSlice {
-
-			dbMap[dbRecord.Idcustodian] = dbRecord
-		}
-
-		//---------------------------------------------------------------------
-
-		targetMap := make(map[uuid.UUID]MapCustodian2Exchange)
-
-		for _, target := range request.Body {
-
-			targetMap[target.Idcustodian] = target
-		}
-
-		//---------------------------------------------------------------------
-		// Step B:
-		//---------------------------------------------------------------------
-
-		for _, target := range request.Body {
-
-			existing, exists := dbMap[target.Idcustodian]
-
-			if !exists {
-
-				err := queries.InsertCustodian2Exchange(ctx, rbsdb.InsertCustodian2ExchangeParams{
-
-					Idexchange:  request.Idexchange,
-					Idcustodian: target.Idcustodian,
-					Flags:       target.Flags,
-					Value01:     target.Value01,
-					Value02:     target.Value02,
-				})
-
-				if err != nil {
-
-					rs.logger.Error("MapCustodian2ExchangeRequestIdExchange", "error", err)
-
-					return nil, huma.Error500InternalServerError("Internal server error")
-				}
-			} else {
-
-				if existing.Flags != target.Flags || existing.Value01 != target.Value01 || existing.Value02 != target.Value02 {
-
-					_, err := queries.UpdateCustodian2Exchange(ctx, rbsdb.UpdateCustodian2ExchangeParams{
-
-						Idexchange:  request.Idexchange,
-						Idcustodian: target.Idcustodian,
-						Flags:       target.Flags,
-						Value01:     target.Value01,
-						Value02:     target.Value02,
-					})
-
-					if err != nil {
-
-						rs.logger.Error("MapCustodian2ExchangeRequestIdExchange", "error", err)
-
-						return nil, huma.Error500InternalServerError("Internal server error")
-					}
-				}
-			}
-		}
-
-		//---------------------------------------------------------------------
-		// Step C:
-		//---------------------------------------------------------------------
-
-		for _, existing := range dbMap {
-
-			if _, exists := targetMap[existing.Idcustodian]; !exists {
-
-				_, err := queries.DeleteCustodian2Exchange(ctx, rbsdb.DeleteCustodian2ExchangeParams{
-
-					Idexchange:  request.Idexchange,
-					Idcustodian: existing.Idcustodian,
-				})
-
-				if err != nil {
-
-					rs.logger.Error("MapCustodian2ExchangeRequestIdExchange", "error", err)
-
-					return nil, huma.Error500InternalServerError("Internal server error")
-				}
-			}
-		}
-
-		return nil, nil
-	})
-
-	//-------------------------------------------------------------------------
-
-	huma.Register(rs.api, huma.Operation{
-		Tags:          []string{"Custodian2Exchange"},
-		OperationID:   "mapExchanges2Custodian",
-		Summary:       "Modify the mapping of multiple exchanges to a single custodian",
-		Description:   "Modify the mapping of multiple exchanges to a single custodian",
-		Method:        http.MethodPost,
-		Path:          "/exchange2custodian/{idcustodian}",
-		DefaultStatus: http.StatusCreated,
-	}, func(ctx context.Context, request *MapCustodian2ExchangeRequestIdCustodian) (*struct{}, error) {
-
-		rs.logger.Info("MapCustodian2ExchangeRequestIdCustodian")
-
-		tx, err := rs.db.Begin(ctx)
-
-		if err != nil {
-
-			rs.logger.Error("MapCustodian2ExchangeRequestIdCustodian", "error", err)
-
-			return nil, mapDBError(err)
-		}
-
-		defer tx.Rollback(ctx)
-
-		queries := rbsdb.New(tx)
+		queries := rs.dbQueries.WithTx(tx)
 
 		//---------------------------------------------------------------------
 		// Step A: Load the current status from the database
@@ -316,7 +173,7 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 		if err != nil {
 
-			rs.logger.Error("MapCustodian2ExchangeRequestIdCustodian", "error", err)
+			rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdCustodian", "error", err)
 
 			return nil, huma.Error500InternalServerError("Internal server error")
 		}
@@ -360,7 +217,7 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 				if err != nil {
 
-					rs.logger.Error("MapCustodian2ExchangeRequestIdCustodian", "error", err)
+					rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdCustodian", "error", err)
 
 					return nil, huma.Error500InternalServerError("Internal server error")
 				}
@@ -379,7 +236,7 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 					if err != nil {
 
-						rs.logger.Error("MapCustodian2ExchangeRequestIdCustodian", "error", err)
+						rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdCustodian", "error", err)
 
 						return nil, huma.Error500InternalServerError("Internal server error")
 					}
@@ -403,15 +260,143 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 				if err != nil {
 
-					rs.logger.Error("MapCustodian2ExchangeRequestIdCustodian", "error", err)
+					rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdCustodian", "error", err)
 
 					return nil, huma.Error500InternalServerError("Internal server error")
 				}
 			}
 		}
 
+		tx.Commit(ctx)
+
 		return nil, nil
-	})
+
+	}, describeEndpoint("mapExchanges2Custodian", "Update the mapping of multiple exchanges to a single custodian"))
+
+	//-------------------------------------------------------------------------
+
+	huma.Put(group, "/idexchange/{idexchange}", func(ctx context.Context, request *MapCustodian2ExchangeRequestIdExchange) (*struct{}, error) {
+
+		tx, err := rs.dbPool.Begin(ctx)
+
+		if err != nil {
+
+			rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdExchange", "error", err)
+
+			return nil, mapDBError(err)
+		}
+
+		defer tx.Rollback(ctx)
+
+		queries := rs.dbQueries.WithTx(tx)
+
+		//---------------------------------------------------------------------
+		// Step A: Load the current status from the database
+		//---------------------------------------------------------------------
+
+		dbSlice, err := queries.GetCustodian2ExchangeByIdExchange(ctx, request.Idexchange)
+
+		if err != nil {
+
+			rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdExchange", "error", err)
+
+			return nil, huma.Error500InternalServerError("Internal server error")
+		}
+
+		//---------------------------------------------------------------------
+
+		dbMap := make(map[uuid.UUID]rbsdb.Custodian2exchange)
+
+		for _, dbRecord := range dbSlice {
+
+			dbMap[dbRecord.Idcustodian] = dbRecord
+		}
+
+		//---------------------------------------------------------------------
+
+		targetMap := make(map[uuid.UUID]MapCustodian2Exchange)
+
+		for _, target := range request.Body {
+
+			targetMap[target.Idcustodian] = target
+		}
+
+		//---------------------------------------------------------------------
+		// Step B:
+		//---------------------------------------------------------------------
+
+		for _, target := range request.Body {
+
+			existing, exists := dbMap[target.Idcustodian]
+
+			if !exists {
+
+				err := queries.InsertCustodian2Exchange(ctx, rbsdb.InsertCustodian2ExchangeParams{
+
+					Idexchange:  request.Idexchange,
+					Idcustodian: target.Idcustodian,
+					Flags:       target.Flags,
+					Value01:     target.Value01,
+					Value02:     target.Value02,
+				})
+
+				if err != nil {
+
+					rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdExchange", "error", err)
+
+					return nil, huma.Error500InternalServerError("Internal server error")
+				}
+			} else {
+
+				if existing.Flags != target.Flags || existing.Value01 != target.Value01 || existing.Value02 != target.Value02 {
+
+					_, err := queries.UpdateCustodian2Exchange(ctx, rbsdb.UpdateCustodian2ExchangeParams{
+
+						Idexchange:  request.Idexchange,
+						Idcustodian: target.Idcustodian,
+						Flags:       target.Flags,
+						Value01:     target.Value01,
+						Value02:     target.Value02,
+					})
+
+					if err != nil {
+
+						rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdExchange", "error", err)
+
+						return nil, huma.Error500InternalServerError("Internal server error")
+					}
+				}
+			}
+		}
+
+		//---------------------------------------------------------------------
+		// Step C:
+		//---------------------------------------------------------------------
+
+		for _, existing := range dbMap {
+
+			if _, exists := targetMap[existing.Idcustodian]; !exists {
+
+				_, err := queries.DeleteCustodian2Exchange(ctx, rbsdb.DeleteCustodian2ExchangeParams{
+
+					Idexchange:  request.Idexchange,
+					Idcustodian: existing.Idcustodian,
+				})
+
+				if err != nil {
+
+					rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdExchange", "error", err)
+
+					return nil, huma.Error500InternalServerError("Internal server error")
+				}
+			}
+		}
+
+		tx.Commit(ctx)
+
+		return nil, nil
+
+	}, describeEndpoint("mapCustodians2Exchange", "Update the mapping of multiple custodians to a single exchange"))
 }
 
 //-----------------------------------------------------------------------------

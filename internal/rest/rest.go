@@ -4,7 +4,9 @@ import (
 	"errors"
 	"log/slog"
 
+	"github.com/ForTheTrashBin/RbsClone/internal/rbsdb"
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -14,18 +16,20 @@ import (
 //-----------------------------------------------------------------------------
 
 type RestServer struct {
-	logger *slog.Logger
-	db     *pgxpool.Pool
-	api    huma.API
+	logger    *slog.Logger
+	dbPool    *pgxpool.Pool
+	dbQueries *rbsdb.Queries
+	api       huma.API
 }
 
-func RegisterAllRoutes(logger *slog.Logger, db *pgxpool.Pool, api huma.API) {
+func RegisterAllRoutes(logger *slog.Logger, dbPool *pgxpool.Pool, dbQueries *rbsdb.Queries, api huma.API) {
 
 	restServer := &RestServer{
 
-		logger: logger,
-		db:     db,
-		api:    api,
+		logger:    logger,
+		dbPool:    dbPool,
+		dbQueries: dbQueries,
+		api:       api,
 	}
 
 	restServer.registerCountryRoutes()
@@ -35,6 +39,17 @@ func RegisterAllRoutes(logger *slog.Logger, db *pgxpool.Pool, api huma.API) {
 }
 
 //-----------------------------------------------------------------------------
+
+func describeEndpoint(operationID string, summaryAndDescription string) func(op *huma.Operation) {
+
+	return func(op *huma.Operation) {
+
+		op.OperationID = operationID
+		op.Summary = summaryAndDescription
+		op.Description = summaryAndDescription
+	}
+}
+
 //-----------------------------------------------------------------------------
 
 func mapDBError(err error) error {
@@ -50,15 +65,15 @@ func mapDBError(err error) error {
 
 		switch pgErr.Code {
 
-		case "23505":
+		case pgerrcode.UniqueViolation:
 
 			return huma.Error409Conflict("Conflict in data processing")
 
-		case "23503":
+		case pgerrcode.ForeignKeyViolation:
 
 			return huma.Error422UnprocessableEntity("Data processing failed due to dependencies")
 
-		case "23502":
+		case pgerrcode.NotNullViolation:
 
 			return huma.Error400BadRequest("Data processing not possible due to incorrect input data")
 		}

@@ -117,23 +117,37 @@ func (apiClient *ApiClient) GetCountries() error {
 
 	ctx := context.Background()
 
-	resp, err := apiClient.genClient.GetCountriesWithResponse(ctx)
+	getCountriesResponse, err := apiClient.genClient.GetCountriesWithResponse(ctx)
 
 	if err != nil {
 
 		return fmt.Errorf("Netzwerkfehler: %w", err)
 	}
 
-	if resp.JSON200 == nil {
+	if getCountriesResponse.JSON200 == nil {
 
-		return fmt.Errorf("Server fehler mit status %d", resp.StatusCode())
+		return fmt.Errorf("Server fehler mit status %d", getCountriesResponse.StatusCode())
 	}
 
 	fmt.Println("*******************************************************************")
-	fmt.Println("** Countries", len(*resp.JSON200))
+	fmt.Println("** Countries", len(*getCountriesResponse.JSON200))
 	fmt.Println("*******************************************************************")
 
-	for _, country := range *resp.JSON200 {
+	for _, countryListItem := range *getCountriesResponse.JSON200 {
+
+		getCountryByIdResponse, err := apiClient.genClient.GetCountryByIdWithResponse(ctx, countryListItem.Id)
+
+		if err != nil {
+
+			return fmt.Errorf("Netzwerkfehler: %w", err)
+		}
+
+		if getCountryByIdResponse.JSON200 == nil {
+
+			return fmt.Errorf("Server fehler mit status %d", getCountryByIdResponse.StatusCode())
+		}
+
+		country := getCountryByIdResponse.GetJSON200()
 
 		var ibanlength int16 = 0
 
@@ -142,30 +156,14 @@ func (apiClient *ApiClient) GetCountries() error {
 			ibanlength = *country.Ibanlenth
 		}
 
-		fmt.Printf("%s, %s, %s, %d, %d\n", country.Id.String(), country.Shortcode, country.Name, country.Flags, ibanlength)
-		/*
-			newName := fmt.Sprintf("Name%d", idx)
-			newShortcode := fmt.Sprintf("%d", idx)
-
-			body := CreateCustodianJSONRequestBody{
-				Depotno:   nil,
-				Flags:     0,
-				Idcountry: country.Id,
-				Name:      newName,
-				Shortcode: newShortcode,
-			}
-
-			createResponse, err := apiClient.genClient.CreateCustodianWithResponse(ctx, body)
-
-			if err != nil {
-
-				return fmt.Errorf("CreateCustodian: Server fehler mit status %w", err)
-			}
-
-			if createResponse.StatusCode() != http.StatusCreated {
-
-				return fmt.Errorf("CreateCustodian: Server fehler mit status %d", createResponse.StatusCode())
-			}*/
+		fmt.Printf("%s, %s, %s, %d, %d, %d\n",
+			country.Id.String(),
+			country.Shortcode,
+			country.Name,
+			country.Flags,
+			ibanlength,
+			country.Risktype,
+		)
 	}
 
 	return nil
@@ -175,25 +173,44 @@ func (apiClient *ApiClient) GetExchanges() error {
 
 	ctx := context.Background()
 
-	resp, err := apiClient.genClient.GetExchangesWithResponse(ctx)
+	getExchangesResponse, err := apiClient.genClient.GetExchangesWithResponse(ctx)
 
 	if err != nil {
 
 		return fmt.Errorf("Netzwerkfehler: %w", err)
 	}
 
-	if resp.JSON200 == nil {
+	if getExchangesResponse.JSON200 == nil {
 
-		return fmt.Errorf("Server fehler mit status %d", resp.StatusCode())
+		return fmt.Errorf("Server fehler mit status %d", getExchangesResponse.StatusCode())
 	}
 
 	fmt.Println("*******************************************************************")
-	fmt.Println("** Exchanges", len(*resp.JSON200))
+	fmt.Println("** Exchanges", len(*getExchangesResponse.JSON200))
 	fmt.Println("*******************************************************************")
 
-	for _, exchange := range *resp.JSON200 {
+	for _, exchangeListItem := range *getExchangesResponse.JSON200 {
 
-		fmt.Printf("%s, %s, %s, %d\n", exchange.Id.String(), exchange.Shortcode, exchange.Name, exchange.Flags)
+		getExchangeByIdResponse, err := apiClient.genClient.GetExchangeByIdWithResponse(ctx, exchangeListItem.Id)
+
+		if err != nil {
+
+			return fmt.Errorf("Netzwerkfehler: %w", err)
+		}
+
+		if getExchangeByIdResponse.JSON200 == nil {
+
+			return fmt.Errorf("Server fehler mit status %d", getExchangeByIdResponse.StatusCode())
+		}
+
+		exchange := getExchangeByIdResponse.GetJSON200()
+
+		fmt.Printf("%s, %s, %s, %d\n",
+			exchange.Id.String(),
+			exchange.Shortcode,
+			exchange.Name,
+			exchange.Flags,
+		)
 	}
 
 	return nil
@@ -203,32 +220,69 @@ func (apiClient *ApiClient) GetCustodians() error {
 
 	ctx := context.Background()
 
-	respcustodian, err := apiClient.genClient.GetCustodiansWithResponse(ctx)
+	getCustodiansResponse, err := apiClient.genClient.GetCustodiansWithResponse(ctx)
 
 	if err != nil {
 
 		return fmt.Errorf("Netzwerkfehler: %w", err)
 	}
 
-	if respcustodian.JSON200 == nil {
+	if getCustodiansResponse.JSON200 == nil {
 
-		return fmt.Errorf("Server fehler mit status %d", respcustodian.StatusCode())
+		return fmt.Errorf("Server fehler mit status %d", getCustodiansResponse.StatusCode())
 	}
 
 	fmt.Println("*******************************************************************")
-	fmt.Println("** Custodians", len(*respcustodian.JSON200))
+	fmt.Println("** Custodians", len(*getCustodiansResponse.JSON200))
 	fmt.Println("*******************************************************************")
 
-	for _, custodian := range *respcustodian.JSON200 {
+	for _, custodianListItem := range *getCustodiansResponse.JSON200 {
 
-		responseCountry, err := apiClient.genClient.GetCountryByIdWithResponse(ctx, custodian.Idcountry)
+		getCustodianByIdResponse, err := apiClient.genClient.GetCustodianByIdWithResponse(ctx, custodianListItem.Id)
+
+		if err != nil {
+
+			return fmt.Errorf("Netzwerkfehler: %w", err)
+		}
+
+		if getCustodianByIdResponse.JSON200 == nil {
+
+			return fmt.Errorf("Server fehler mit status %d", getCustodianByIdResponse.StatusCode())
+		}
+
+		custodian := getCustodianByIdResponse.GetJSON200()
+
+		var depotNo string = "??"
+
+		if custodian.Depotno != nil {
+
+			depotNo = *custodian.Depotno
+		}
+
+		getCountryByIdResponse, err := apiClient.genClient.GetCountryByIdWithResponse(ctx, custodian.Idcountry)
 
 		if err == nil {
 
-			fmt.Printf("%s, %s, %s, %s\n", custodian.Id.String(), custodian.Shortcode, custodian.Name, responseCountry.JSON200.Shortcode)
+			fmt.Printf("%s, %s, %s, %d, %s, %s\n",
+
+				custodian.Id.String(),
+				custodian.Shortcode,
+				custodian.Name,
+				custodian.Flags,
+				getCountryByIdResponse.JSON200.Shortcode,
+				depotNo,
+			)
 		} else {
 
-			fmt.Printf("%s, %s, %s, %s\n", custodian.Id.String(), custodian.Shortcode, custodian.Name, "???????????????????")
+			fmt.Printf("%s, %s, %s, %d, %s, %s\n",
+
+				custodian.Id.String(),
+				custodian.Shortcode,
+				custodian.Name,
+				custodian.Flags,
+				"??",
+				depotNo,
+			)
 		}
 	}
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"net/http"
 
 	"github.com/ForTheTrashBin/RbsClone/internal/rbsdb"
 	"github.com/danielgtaylor/huma/v2"
@@ -12,6 +11,21 @@ import (
 )
 
 //-----------------------------------------------------------------------------
+//
+//	GET		Get List 			"/custodian"
+//	GET		Get by Id			"/custodian/id/{id}"
+//	GET		Get by Shortcode	"/custodian/shortcode/{shortcode}"
+//	POST	Create				"/custodian"
+//	DELETE	Delete				"/custodian/{id}"
+//	PUT		Update				"/custodian/{id}"
+//
+//-----------------------------------------------------------------------------
+
+type CustodianListItem struct {
+	Id        uuid.UUID `json:"id" format:"uuid" doc:"This is the unique identifier a this data"`
+	Shortcode string    `json:"shortcode" minLength:"1" maxLength:"5" doc:"A unique short name for this data"`
+	Name      string    `json:"name" minLength:"1" maxLength:"30" doc:"A longer more descriptive description of this data"`
+}
 
 type CustodianNoPK struct {
 	Shortcode string    `json:"shortcode" minLength:"1" maxLength:"5" doc:"A unique short name for this data"`
@@ -54,129 +68,102 @@ type CustodianResponse struct {
 	Body Custodian
 }
 
-type CustodiansResponse struct {
-	Body []Custodian
+type CustodianListResponse struct {
+	Body []CustodianListItem
 }
 
 //-----------------------------------------------------------------------------
 
 func (rs *RestServer) registerCustodianRoutes() {
 
-	huma.Register(rs.api, huma.Operation{
-		Tags:        []string{"Custodian"},
-		OperationID: "getCustodians",
-		Summary:     "Get a list of all custodians",
-		Description: "Get a list of all custodians",
-		Method:      http.MethodGet,
-		Path:        "/custodians",
-	}, func(ctx context.Context, input *struct{}) (*CustodiansResponse, error) {
+	group := huma.NewGroup(rs.api, "/custodian")
 
-		rs.logger.Info("GetCustodians")
+	group.UseModifier(func(op *huma.Operation, next func(*huma.Operation)) {
 
-		queries := rbsdb.New(rs.db)
+		op.Tags = append(op.Tags, "Custodian")
 
-		dbSlice, err := queries.GetCustodians(ctx)
-
-		if err != nil {
-
-			rs.logger.Error("ListCustodians", "error", err)
-
-			return nil, mapDBError(err)
-		}
-
-		result := make([]Custodian, len(dbSlice))
-
-		for idx, dbData := range dbSlice {
-
-			result[idx] = mapDB2APICustodian(dbData)
-		}
-
-		return &CustodiansResponse{Body: result}, nil
-	})
-
-	huma.Register(rs.api, huma.Operation{
-		Tags:        []string{"Custodian"},
-		OperationID: "getCustodianById",
-		Summary:     "Get a single custodian based on the id supplied",
-		Description: "Get a single custodian based on the id supplied",
-		Method:      http.MethodGet,
-		Path:        "/custodian/id/{id}",
-	}, func(ctx context.Context, request *CustodianRequestId) (*CustodianResponse, error) {
-
-		rs.logger.Info("GetCustodianById", "Id", request.Id)
-
-		queries := rbsdb.New(rs.db)
-
-		dbresult, err := queries.GetCustodianByID(ctx, request.Id)
-
-		if err != nil {
-
-			if errors.Is(err, sql.ErrNoRows) {
-
-				return nil, huma.Error404NotFound("No data found")
-
-			} else {
-
-				rs.logger.Error("ReadCustodianById", "error", err)
-
-				return nil, mapDBError(err)
-			}
-		}
-
-		custodian := mapDB2APICustodian(dbresult)
-
-		return &CustodianResponse{Body: custodian}, nil
-	})
-
-	huma.Register(rs.api, huma.Operation{
-		Tags:        []string{"Custodian"},
-		OperationID: "getCustodianByShortcode",
-		Summary:     "Get a single custodian based on the shortcode supplied",
-		Description: "Get a single custodian based on the shortcode supplied",
-		Method:      http.MethodGet,
-		Path:        "/custodian/shortcode/{shortcode}",
-	}, func(ctx context.Context, request *CustodianRequestShortcode) (*CustodianResponse, error) {
-
-		rs.logger.Info("GetCustodianByShortcode", "Shortcode", request.Shortcode)
-
-		queries := rbsdb.New(rs.db)
-
-		dbresult, err := queries.GetCustodianByShortcode(ctx, request.Shortcode)
-
-		if err != nil {
-
-			if errors.Is(err, sql.ErrNoRows) {
-
-				return nil, huma.Error404NotFound("No data found")
-
-			} else {
-
-				rs.logger.Error("ReadCustodianById", "error", err)
-
-				return nil, mapDBError(err)
-			}
-		}
-
-		custodian := mapDB2APICustodian(dbresult)
-
-		return &CustodianResponse{Body: custodian}, nil
+		next(op)
 	})
 
 	//-------------------------------------------------------------------------
 
-	huma.Register(rs.api, huma.Operation{
-		Tags:          []string{"Custodian"},
-		OperationID:   "createCustodian",
-		Summary:       "Create a new custodian",
-		Description:   "Create a new custodian",
-		Method:        http.MethodPost,
-		Path:          "/custodian",
-		DefaultStatus: http.StatusCreated,
-	}, func(ctx context.Context, request *CustodianRequestCreate) (*CustodianResponseCreate, error) {
+	huma.Get(group, "", func(ctx context.Context, request *struct{}) (*CustodianListResponse, error) {
 
-		rs.logger.Info("CreateCustodian")
+		dbSlice, err := rs.dbQueries.GetCustodians(ctx)
 
-		queries := rbsdb.New(rs.db)
+		if err != nil {
+
+			rs.logger.ErrorContext(ctx, "ListCustodians", "error", err)
+
+			return nil, mapDBError(err)
+		}
+
+		result := make([]CustodianListItem, len(dbSlice))
+
+		for idx, dbData := range dbSlice {
+
+			result[idx] = mapDB2APICustodianListItem(dbData)
+		}
+
+		return &CustodianListResponse{Body: result}, nil
+
+	}, describeEndpoint("getCustodians", "Get a list of all custodians"))
+
+	//-------------------------------------------------------------------------
+
+	huma.Get(group, "/id/{id}", func(ctx context.Context, request *CustodianRequestId) (*CustodianResponse, error) {
+
+		dbresult, err := rs.dbQueries.GetCustodianByID(ctx, request.Id)
+
+		if err != nil {
+
+			if errors.Is(err, sql.ErrNoRows) {
+
+				return nil, huma.Error404NotFound("No data found")
+
+			} else {
+
+				rs.logger.ErrorContext(ctx, "ReadCustodianById", "error", err)
+
+				return nil, mapDBError(err)
+			}
+		}
+
+		custodian := mapDB2APICustodian(dbresult)
+
+		return &CustodianResponse{Body: custodian}, nil
+
+	}, describeEndpoint("getCustodianById", "Get a single custodian based on the id supplied"))
+
+	//-------------------------------------------------------------------------
+
+	huma.Get(group, "/shortcode/{shortcode}", func(ctx context.Context, request *CustodianRequestShortcode) (*CustodianResponse, error) {
+
+		dbresult, err := rs.dbQueries.GetCustodianByShortcode(ctx, request.Shortcode)
+
+		if err != nil {
+
+			if errors.Is(err, sql.ErrNoRows) {
+
+				return nil, huma.Error404NotFound("No data found")
+
+			} else {
+
+				rs.logger.ErrorContext(ctx, "ReadCustodianById", "error", err)
+
+				return nil, mapDBError(err)
+			}
+		}
+
+		custodian := mapDB2APICustodian(dbresult)
+
+		return &CustodianResponse{Body: custodian}, nil
+
+	}, describeEndpoint("getCustodianByShortcode", "Get a single custodian based on the shortcode supplied"))
+
+	//-------------------------------------------------------------------------
+
+	huma.Post(group, "", func(ctx context.Context, request *CustodianRequestCreate) (*CustodianResponseCreate, error) {
 
 		insertParams := rbsdb.InsertCustodianParams{
 
@@ -187,39 +174,28 @@ func (rs *RestServer) registerCustodianRoutes() {
 			Depotno:   mapToNullString(request.Body.Depotno),
 		}
 
-		result, err := queries.InsertCustodian(ctx, insertParams)
+		result, err := rs.dbQueries.InsertCustodian(ctx, insertParams)
 
 		if err != nil {
 
-			rs.logger.Error("CreateCustodian", "error", err)
+			rs.logger.ErrorContext(ctx, "CreateCustodian", "error", err)
 
 			return nil, mapDBError(err)
 		}
 
 		return &CustodianResponseCreate{Id: result}, nil
-	})
+
+	}, describeEndpoint("createCustodian", "Create a new custodian"))
 
 	//-------------------------------------------------------------------------
 
-	huma.Register(rs.api, huma.Operation{
-		Tags:          []string{"Custodian"},
-		OperationID:   "deleteCustodian",
-		Summary:       "Delete a single custodian based on the id supplied",
-		Description:   "Delete a single custodian based on the id supplied",
-		Method:        http.MethodDelete,
-		Path:          "/custodian/{id}",
-		DefaultStatus: http.StatusNoContent,
-	}, func(ctx context.Context, request *CustodianRequestId) (*struct{}, error) {
+	huma.Delete(group, "/{id}", func(ctx context.Context, request *CustodianRequestId) (*struct{}, error) {
 
-		rs.logger.Info("DeleteCustodian", "Id", request.Id)
-
-		queries := rbsdb.New(rs.db)
-
-		result, err := queries.DeleteCustodian(ctx, request.Id)
+		result, err := rs.dbQueries.DeleteCustodian(ctx, request.Id)
 
 		if err != nil {
 
-			rs.logger.Error("DeleteCustodian", "error", err)
+			rs.logger.ErrorContext(ctx, "DeleteCustodian", "error", err)
 
 			return nil, mapDBError(err)
 		}
@@ -230,23 +206,12 @@ func (rs *RestServer) registerCustodianRoutes() {
 		}
 
 		return nil, nil
-	})
+
+	}, describeEndpoint("deleteCustodian", "Delete a single custodian based on the id supplied"))
 
 	//-------------------------------------------------------------------------
 
-	huma.Register(rs.api, huma.Operation{
-		Tags:          []string{"Custodian"},
-		OperationID:   "updateCustodian",
-		Summary:       "Update an existing custodian based on the id supplied",
-		Description:   "Update an existing custodian based on the id supplied",
-		Method:        http.MethodPut,
-		Path:          "/custodian/{id}",
-		DefaultStatus: http.StatusOK,
-	}, func(ctx context.Context, request *CustodianRequestUpdate) (*struct{}, error) {
-
-		rs.logger.Info("UpdateCustodian", "Id", request.Id)
-
-		queries := rbsdb.New(rs.db)
+	huma.Put(group, "/{id}", func(ctx context.Context, request *CustodianRequestUpdate) (*struct{}, error) {
 
 		updateParams := rbsdb.UpdateCustodianParams{
 
@@ -258,11 +223,11 @@ func (rs *RestServer) registerCustodianRoutes() {
 			Depotno:     mapToNullString(request.Body.Depotno),
 		}
 
-		result, err := queries.UpdateCustodian(ctx, updateParams)
+		result, err := rs.dbQueries.UpdateCustodian(ctx, updateParams)
 
 		if err != nil {
 
-			rs.logger.Error("UpdateCustodian", "error", err)
+			rs.logger.ErrorContext(ctx, "UpdateCustodian", "error", err)
 
 			return nil, mapDBError(err)
 		}
@@ -273,10 +238,21 @@ func (rs *RestServer) registerCustodianRoutes() {
 		}
 
 		return nil, nil
-	})
+
+	}, describeEndpoint("updateCustodian", "Update an existing custodian based on the id supplied"))
 }
 
 //-----------------------------------------------------------------------------
+
+func mapDB2APICustodianListItem(record rbsdb.Custodian) CustodianListItem {
+
+	return CustodianListItem{
+
+		Id:        record.Idcustodian,
+		Shortcode: record.Shortcode,
+		Name:      record.Name,
+	}
+}
 
 func mapDB2APICustodian(record rbsdb.Custodian) Custodian {
 

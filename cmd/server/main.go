@@ -11,14 +11,19 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/danielgtaylor/huma/v2/adapters/humago"
+	"github.com/danielgtaylor/huma/v2/adapters/humachi"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/ForTheTrashBin/RbsClone/internal/logging"
 	"github.com/ForTheTrashBin/RbsClone/internal/osspecific"
+	"github.com/ForTheTrashBin/RbsClone/internal/rbsdb"
 	"github.com/ForTheTrashBin/RbsClone/internal/rest"
 	"github.com/ForTheTrashBin/RbsClone/internal/serverconfig"
 	"golang.org/x/sync/errgroup"
@@ -174,10 +179,6 @@ func main() {
 	cancelDBConnectTimeout()
 
 	//-------------------------------------------------------------------------
-
-	// tools.InitializeCountry(logger, dbPool)
-
-	//-------------------------------------------------------------------------
 	// Create a context that is canceled (ctx.Done()) when an interrupt signal is received
 	//-------------------------------------------------------------------------
 
@@ -227,16 +228,16 @@ func main() {
 	humaConfigHTTP.OpenAPI.Info.Version = "0.1.0"
 
 	humaConfigHTTP.OpenAPI.Info.Contact = &huma.Contact{
-		Email: "info@rbsclode.de",
+		Email: "info@rbsclone.de",
 		Name:  "Your magnificent RbsClone support team",
-		URL:   "https://support.rbsclone.de",
+		URL:   "http://support.rbsclone.de",
 	}
 
 	humaConfigHTTP.OpenAPI.Info.Description = "This is a detailed description of RbsClone. RbsClone is the best program in the world!"
 
 	humaConfigHTTP.OpenAPI.Info.License = &huma.License{
 		Name: "Apache 2.0",
-		URL:  "https://www.apache.org/licenses/LICENSE-2.0.html",
+		URL:  "http://www.apache.org/licenses/LICENSE-2.0.html",
 	}
 
 	//-------------------------------------------------------------------------
@@ -256,11 +257,34 @@ func main() {
 
 	//-------------------------------------------------------------------------
 
-	routerHTTP := http.NewServeMux()
+	routerHTTP := chi.NewRouter()
 
-	apiHTTP := humago.New(routerHTTP, humaConfigHTTP)
+	routerHTTP.Use(cors.Handler(cors.Options{
 
-	rest.RegisterAllRoutes(logger, dbPool, apiHTTP)
+		AllowOriginFunc: func(r *http.Request, origin string) bool {
+
+			return strings.HasPrefix(origin, "http://localhost:") ||
+				strings.HasPrefix(origin, "https://127.0.0.1:") ||
+				origin == "http://www.rbsclone.de"
+		},
+
+		/* AllowedOrigins: []string{
+			"https://localhost",
+			"https://127.0.0.1",
+			"https://www.rbsclone.de",
+		},*/
+
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Requested-With"},
+		AllowCredentials: false,
+		MaxAge:           300,
+	}))
+
+	routerHTTP.Use(logging.SlogMiddleware(logger))
+
+	apiHTTP := humachi.New(routerHTTP, humaConfigHTTP)
+
+	rest.RegisterAllRoutes(logger, dbPool, rbsdb.New(dbPool), apiHTTP)
 
 	serverHTTP := &http.Server{
 
@@ -293,7 +317,7 @@ func main() {
 	humaConfigHTTPS.OpenAPI.Info.Version = "0.1.0"
 
 	humaConfigHTTPS.OpenAPI.Info.Contact = &huma.Contact{
-		Email: "info@rbsclode.de",
+		Email: "info@rbsclone.de",
 		Name:  "Your magnificent RbsClone support team",
 		URL:   "https://support.rbsclone.de",
 	}
@@ -322,11 +346,34 @@ func main() {
 
 	//-------------------------------------------------------------------------
 
-	routerHTTPS := http.NewServeMux()
+	routerHTTPS := chi.NewRouter()
 
-	apiHTTPS := humago.New(routerHTTPS, humaConfigHTTPS)
+	routerHTTPS.Use(cors.Handler(cors.Options{
 
-	rest.RegisterAllRoutes(logger, dbPool, apiHTTPS)
+		AllowOriginFunc: func(r *http.Request, origin string) bool {
+
+			return strings.HasPrefix(origin, "http://localhost:") ||
+				strings.HasPrefix(origin, "https://127.0.0.1:") ||
+				origin == "http://www.rbsclone.de"
+		},
+
+		/* AllowedOrigins: []string{
+			"https://localhost",
+			"https://127.0.0.1",
+			"https://www.rbsclone.de",
+		},*/
+
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Requested-With"},
+		AllowCredentials: false,
+		MaxAge:           300,
+	}))
+
+	routerHTTPS.Use(logging.SlogMiddleware(logger))
+
+	apiHTTPS := humachi.New(routerHTTPS, humaConfigHTTPS)
+
+	rest.RegisterAllRoutes(logger, dbPool, rbsdb.New(dbPool), apiHTTPS)
 
 	serverHTTPS := &http.Server{
 
