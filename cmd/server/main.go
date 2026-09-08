@@ -11,7 +11,6 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
-	"strings"
 	"syscall"
 	"time"
 
@@ -261,19 +260,7 @@ func main() {
 
 	routerHTTP.Use(cors.Handler(cors.Options{
 
-		AllowOriginFunc: func(r *http.Request, origin string) bool {
-
-			return strings.HasPrefix(origin, "http://localhost:") ||
-				strings.HasPrefix(origin, "https://127.0.0.1:") ||
-				origin == "http://www.rbsclone.de"
-		},
-
-		/* AllowedOrigins: []string{
-			"https://localhost",
-			"https://127.0.0.1",
-			"https://www.rbsclone.de",
-		},*/
-
+		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Requested-With"},
 		AllowCredentials: false,
@@ -350,19 +337,7 @@ func main() {
 
 	routerHTTPS.Use(cors.Handler(cors.Options{
 
-		AllowOriginFunc: func(r *http.Request, origin string) bool {
-
-			return strings.HasPrefix(origin, "http://localhost:") ||
-				strings.HasPrefix(origin, "https://127.0.0.1:") ||
-				origin == "http://www.rbsclone.de"
-		},
-
-		/* AllowedOrigins: []string{
-			"https://localhost",
-			"https://127.0.0.1",
-			"https://www.rbsclone.de",
-		},*/
-
+		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Requested-With"},
 		AllowCredentials: false,
