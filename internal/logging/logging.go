@@ -23,6 +23,15 @@ func SlogMiddleware(logger *slog.Logger) func(http.Handler) http.Handler {
 
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
+			if r.URL.Path == "/ping" {
+
+				next.ServeHTTP(w, r)
+
+				return
+			}
+
+			//-----------------------------------------------------------------
+
 			start := time.Now()
 
 			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
