@@ -105,8 +105,8 @@ func seedCustodian2Exchange(logger *slog.Logger, dbPool *pgxpool.Pool) error {
 
 				err = baseQueries.InsertCustodian2Exchange(ctx, rbsdb.InsertCustodian2ExchangeParams{
 
-					Idexchange:  exchange.Idexchange,
-					Idcustodian: custodian.Idcustodian,
+					Idexchange:  exchange.ID,
+					Idcustodian: custodian.ID,
 					Flags:       0,
 					Value01:     "xxx",
 					Value02:     88,

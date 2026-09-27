@@ -12,8 +12,8 @@ import (
 
 //-----------------------------------------------------------------------------
 //
-//	GET		Get by IdCustodian	"/custodian2exchange/idcustodian/{idcustodian}"
-//	GET		Get by IdExchange	"/custodian2exchange/idexchange/{idexchange}"
+//	GET		Get by Idcustodian	"/custodian2exchange/idcustodian/{idcustodian}"
+//	GET		Get by Idexchange	"/custodian2exchange/idexchange/{idexchange}"
 //	PUT		Update				"/custodian2exchange/idcustodian/{idcustodian}"
 //	PUT		Update				"/custodian2exchange/idexchange/{idexchange}"
 //
@@ -33,11 +33,11 @@ type Custodian2Exchange struct {
 
 //-----------------------------------------------------------------------------
 
-type Custodian2ExchangeRequestIdExchange struct {
+type Custodian2ExchangeRequestIdexchange struct {
 	Idexchange uuid.UUID `path:"idexchange" format:"uuid" doc:"This is one of the two parts of the unique identifier of this data"`
 }
 
-type Custodian2ExchangeRequestIdCustodian struct {
+type Custodian2ExchangeRequestIdcustodian struct {
 	Idcustodian uuid.UUID `path:"idcustodian" format:"uuid" doc:"This is one of the two parts of the unique identifier of this data"`
 }
 
@@ -48,7 +48,7 @@ type MapCustodian2Exchange struct {
 	Custodian2ExchangeNoPK
 }
 
-type MapCustodian2ExchangeRequestIdExchange struct {
+type MapCustodian2ExchangeRequestIdexchange struct {
 	Idexchange uuid.UUID `path:"idexchange" doc:"This is one of the two parts of the unique identifier of this data"`
 
 	Body []MapCustodian2Exchange
@@ -61,7 +61,7 @@ type MapExchange2Custodian struct {
 	Custodian2ExchangeNoPK
 }
 
-type MapCustodian2ExchangeRequestIdCustodian struct {
+type MapCustodian2ExchangeRequestIdcustodian struct {
 	Idcustodian uuid.UUID `path:"idcustodian" format:"uuid" doc:"This is one of the two parts of the unique identifier of this data"`
 
 	Body []MapExchange2Custodian
@@ -88,9 +88,9 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 	//-------------------------------------------------------------------------
 
-	huma.Get(group, "/idcustodian/{idcustodian}", func(ctx context.Context, request *Custodian2ExchangeRequestIdCustodian) (*Custodian2ExchangeResponse, error) {
+	huma.Get(group, "/idcustodian/{idcustodian}", func(ctx context.Context, request *Custodian2ExchangeRequestIdcustodian) (*Custodian2ExchangeResponse, error) {
 
-		dbSlice, err := rs.dbQueries.GetCustodian2ExchangeByIdCustodian(ctx, request.Idcustodian)
+		dbSlice, err := rs.dbQueries.GetCustodian2ExchangeByIdcustodian(ctx, request.Idcustodian)
 
 		if err != nil {
 
@@ -100,7 +100,7 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 			} else {
 
-				rs.logger.ErrorContext(ctx, "ReadCustodian2ExchangeById", "error", err)
+				rs.logger.ErrorContext(ctx, "ReadCustodian2ExchangeByIdcustodian", "error", err)
 
 				return nil, mapDBError(err)
 			}
@@ -115,13 +115,13 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 		return &Custodian2ExchangeResponse{Body: result}, nil
 
-	}, describeEndpoint("getCustodian2ExchangeByIdCustodian", "Get a list of all mappings by idcustodian supplied"))
+	}, describeEndpoint("getCustodian2ExchangeByIdcustodian", "Get a list of all mappings by idcustodian supplied"))
 
 	//-------------------------------------------------------------------------
 
-	huma.Get(group, "/idexchange/{idexchange}", func(ctx context.Context, request *Custodian2ExchangeRequestIdExchange) (*Custodian2ExchangeResponse, error) {
+	huma.Get(group, "/idexchange/{idexchange}", func(ctx context.Context, request *Custodian2ExchangeRequestIdexchange) (*Custodian2ExchangeResponse, error) {
 
-		dbSlice, err := rs.dbQueries.GetCustodian2ExchangeByIdExchange(ctx, request.Idexchange)
+		dbSlice, err := rs.dbQueries.GetCustodian2ExchangeByIdexchange(ctx, request.Idexchange)
 
 		if err != nil {
 
@@ -131,7 +131,7 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 			} else {
 
-				rs.logger.ErrorContext(ctx, "ReadCustodian2ExchangeById", "error", err)
+				rs.logger.ErrorContext(ctx, "ReadCustodian2ExchangeByIdexchange", "error", err)
 
 				return nil, mapDBError(err)
 			}
@@ -146,17 +146,17 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 		return &Custodian2ExchangeResponse{Body: result}, nil
 
-	}, describeEndpoint("getCustodian2ExchangeByIdExchange", "Get a list of all mappings by idexchange supplied"))
+	}, describeEndpoint("getCustodian2ExchangeByIdexchange", "Get a list of all mappings by idexchange supplied"))
 
 	//-------------------------------------------------------------------------
 
-	huma.Put(group, "/idcustodian/{idcustodian}", func(ctx context.Context, request *MapCustodian2ExchangeRequestIdCustodian) (*struct{}, error) {
+	huma.Put(group, "/idcustodian/{idcustodian}", func(ctx context.Context, request *MapCustodian2ExchangeRequestIdcustodian) (*struct{}, error) {
 
 		tx, err := rs.dbPool.Begin(ctx)
 
 		if err != nil {
 
-			rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdCustodian", "error", err)
+			rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdcustodian", "error", err)
 
 			return nil, mapDBError(err)
 		}
@@ -169,11 +169,11 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 		// Step A: Load the current status from the database
 		//---------------------------------------------------------------------
 
-		dbSlice, err := queries.GetCustodian2ExchangeByIdCustodian(ctx, request.Idcustodian)
+		dbSlice, err := queries.GetCustodian2ExchangeByIdcustodian(ctx, request.Idcustodian)
 
 		if err != nil {
 
-			rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdCustodian", "error", err)
+			rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdcustodian", "error", err)
 
 			return nil, huma.Error500InternalServerError("Internal server error")
 		}
@@ -217,7 +217,7 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 				if err != nil {
 
-					rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdCustodian", "error", err)
+					rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdcustodian", "error", err)
 
 					return nil, huma.Error500InternalServerError("Internal server error")
 				}
@@ -236,7 +236,7 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 					if err != nil {
 
-						rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdCustodian", "error", err)
+						rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdcustodian", "error", err)
 
 						return nil, huma.Error500InternalServerError("Internal server error")
 					}
@@ -260,7 +260,7 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 				if err != nil {
 
-					rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdCustodian", "error", err)
+					rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdcustodian", "error", err)
 
 					return nil, huma.Error500InternalServerError("Internal server error")
 				}
@@ -275,13 +275,13 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 	//-------------------------------------------------------------------------
 
-	huma.Put(group, "/idexchange/{idexchange}", func(ctx context.Context, request *MapCustodian2ExchangeRequestIdExchange) (*struct{}, error) {
+	huma.Put(group, "/idexchange/{idexchange}", func(ctx context.Context, request *MapCustodian2ExchangeRequestIdexchange) (*struct{}, error) {
 
 		tx, err := rs.dbPool.Begin(ctx)
 
 		if err != nil {
 
-			rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdExchange", "error", err)
+			rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdexchange", "error", err)
 
 			return nil, mapDBError(err)
 		}
@@ -294,11 +294,11 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 		// Step A: Load the current status from the database
 		//---------------------------------------------------------------------
 
-		dbSlice, err := queries.GetCustodian2ExchangeByIdExchange(ctx, request.Idexchange)
+		dbSlice, err := queries.GetCustodian2ExchangeByIdexchange(ctx, request.Idexchange)
 
 		if err != nil {
 
-			rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdExchange", "error", err)
+			rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdexchange", "error", err)
 
 			return nil, huma.Error500InternalServerError("Internal server error")
 		}
@@ -342,7 +342,7 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 				if err != nil {
 
-					rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdExchange", "error", err)
+					rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdexchange", "error", err)
 
 					return nil, huma.Error500InternalServerError("Internal server error")
 				}
@@ -361,7 +361,7 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 					if err != nil {
 
-						rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdExchange", "error", err)
+						rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdexchange", "error", err)
 
 						return nil, huma.Error500InternalServerError("Internal server error")
 					}
@@ -385,7 +385,7 @@ func (rs *RestServer) registerCustodian2ExchangeRoutes() {
 
 				if err != nil {
 
-					rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdExchange", "error", err)
+					rs.logger.ErrorContext(ctx, "MapCustodian2ExchangeRequestIdexchange", "error", err)
 
 					return nil, huma.Error500InternalServerError("Internal server error")
 				}

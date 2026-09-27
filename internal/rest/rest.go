@@ -93,6 +93,13 @@ func describeEndpoint(operationID string, summaryAndDescription string) func(op 
 	}
 }
 
+func defaultStatus(defaultStatus int) func(op *huma.Operation) {
+	return func(op *huma.Operation) {
+
+		op.DefaultStatus = defaultStatus
+	}
+}
+
 //-----------------------------------------------------------------------------
 
 func mapDBError(err error) error {

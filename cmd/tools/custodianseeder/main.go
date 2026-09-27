@@ -114,7 +114,7 @@ func seedCustodians(logger *slog.Logger, dbPool *pgxpool.Pool) error {
 				Shortcode: shortcode,
 				Name:      name,
 				Flags:     0,
-				Idcountry: country.Idcountry,
+				Idcountry: country.ID,
 				Depotno:   pgtype.Text{Valid: false},
 			})
 
