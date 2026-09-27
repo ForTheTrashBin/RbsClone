@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 CREATE TABLE exchange (
 
-    idexchange UUID PRIMARY KEY DEFAULT uuidv7(),
+    id UUID PRIMARY KEY DEFAULT uuidv7(),
 
     shortcode VARCHAR(8) NOT NULL UNIQUE,
 

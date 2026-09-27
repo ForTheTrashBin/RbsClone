@@ -2,19 +2,13 @@
 -- Table: exchange
 -- ============================================================================
 
--- name: InsertExchange :one
-
-INSERT INTO EXCHANGE (shortcode, name, flags) VALUES ($1, $2, $3) RETURNING idExchange;
-
--- ----------------------------------------------------------------------------
-
 -- name: GetExchanges :many
 
 SELECT * FROM EXCHANGE ORDER BY shortcode;
 
--- name: GetExchangeByID :one
+-- name: GetExchangeById :one
 
-SELECT * FROM EXCHANGE WHERE idExchange = $1 LIMIT 1;
+SELECT * FROM EXCHANGE WHERE id = $1 LIMIT 1;
 
 -- name: GetExchangeByShortcode :one
 
@@ -22,12 +16,18 @@ SELECT * FROM EXCHANGE WHERE shortcode = $1 LIMIT 1;
 
 -- ----------------------------------------------------------------------------
 
--- name: UpdateExchange :execresult
+-- name: InsertExchange :one
 
-UPDATE EXCHANGE SET shortcode = $2, name = $3, flags = $4 WHERE idexchange = $1;
+INSERT INTO EXCHANGE (shortcode, name, flags) VALUES ($1, $2, $3) RETURNING *;
+
+-- ----------------------------------------------------------------------------
+
+-- name: UpdateExchange :one
+
+UPDATE EXCHANGE SET shortcode = $2, name = $3, flags = $4 WHERE id = $1 RETURNING *;
 
 -- ----------------------------------------------------------------------------
 
 -- name: DeleteExchange :execresult
 
-DELETE FROM EXCHANGE WHERE idexchange = $1;
+DELETE FROM EXCHANGE WHERE id = $1;

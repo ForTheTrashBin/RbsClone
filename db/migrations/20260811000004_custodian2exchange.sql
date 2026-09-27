@@ -12,8 +12,8 @@ CREATE TABLE custodian2exchange (
 
     PRIMARY KEY (idexchange, idcustodian),
 
-    CONSTRAINT fk_exchange  FOREIGN KEY (idexchange)  REFERENCES exchange(idexchange)   ON DELETE CASCADE,
-    CONSTRAINT fk_custodian FOREIGN KEY (idcustodian) REFERENCES custodian(idcustodian) ON DELETE CASCADE
+    CONSTRAINT fk_exchange  FOREIGN KEY (idexchange)  REFERENCES exchange(id) ON DELETE CASCADE,
+    CONSTRAINT fk_custodian FOREIGN KEY (idcustodian) REFERENCES custodian(id) ON DELETE CASCADE
 );
 -- +goose StatementEnd
 

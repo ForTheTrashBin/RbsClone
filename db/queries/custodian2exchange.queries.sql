@@ -2,23 +2,23 @@
 -- Table: custodian2exchange
 -- ============================================================================
 
--- name: InsertCustodian2Exchange :exec
-
-INSERT INTO CUSTODIAN2EXCHANGE (idexchange, idcustodian, flags, value01, value02) VALUES ($1, $2, $3, $4, $5);
-
--- ----------------------------------------------------------------------------
-
--- name: GetCustodian2ExchangeByIdExchange :many
+-- name: GetCustodian2ExchangeByIdexchange :many
 
 SELECT * FROM CUSTODIAN2EXCHANGE WHERE idexchange = $1 ORDER BY idcustodian;
 
--- name: GetCustodian2ExchangeByIdCustodian :many
+-- name: GetCustodian2ExchangeByIdcustodian :many
 
 SELECT * FROM CUSTODIAN2EXCHANGE WHERE idcustodian = $1 ORDER BY idexchange;
 
--- name: GetCustodian2ExchangeByIdExchangeAndIdCustodian :one
+-- name: GetCustodian2ExchangeByIdexchangeAndIdcustodian :one
 
 SELECT * FROM CUSTODIAN2EXCHANGE WHERE idexchange = $1 AND idcustodian = $2 LIMIT 1;
+
+-- ----------------------------------------------------------------------------
+
+-- name: InsertCustodian2Exchange :exec
+
+INSERT INTO CUSTODIAN2EXCHANGE (idexchange, idcustodian, flags, value01, value02) VALUES ($1, $2, $3, $4, $5);
 
 -- ----------------------------------------------------------------------------
 

@@ -2,11 +2,11 @@
 -- +goose StatementBegin
 CREATE TABLE custodian (
 
-    idcustodian UUID PRIMARY KEY DEFAULT uuidv7(),
+    id UUID PRIMARY KEY DEFAULT uuidv7(),
 
     shortcode VARCHAR(5) NOT NULL UNIQUE,
 
-    name VARCHAR(30) NOT NULL,
+    name VARCHAR(80) NOT NULL,
 
     flags SMALLINT DEFAULT 0 NOT NULL,
 
@@ -16,7 +16,7 @@ CREATE TABLE custodian (
 
     CONSTRAINT chk_shortcode_uppercase CHECK (shortcode ~ '^[A-Z0-9ÄÖÜß]+$'),
 
-    CONSTRAINT fk_country FOREIGN KEY (idcountry) REFERENCES country(idcountry) ON DELETE RESTRICT
+    CONSTRAINT fk_country FOREIGN KEY (idcountry) REFERENCES country(id) ON DELETE RESTRICT
 );
 -- +goose StatementEnd
 
