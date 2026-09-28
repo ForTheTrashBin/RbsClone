@@ -155,6 +155,10 @@ func main() {
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: config.LogLevel})) // Level: parseLogLevel(config.LogLevel)}))
 
+	logger.Info("********************************************************************")
+	logger.Info("*** Seeding Exchange ***********************************************")
+	logger.Info("********************************************************************")
+
 	logger.Info("Application config", "DB_USER", config.DB.User)
 	logger.Info("Application config", "DB_PASSWORD", config.DB.Password)
 	logger.Info("Application config", "DB_HOST", config.DB.Host)

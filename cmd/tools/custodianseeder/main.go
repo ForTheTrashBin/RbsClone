@@ -105,9 +105,9 @@ func seedCustodians(logger *slog.Logger, dbPool *pgxpool.Pool) error {
 			// Call database via SQLC to insert record
 			//---------------------------------------------------------------------
 
-			if len(name) > 30 {
+			if len(name) > 80 {
 
-				name = name[:30]
+				name = name[:80]
 			}
 			_, err = baseQueries.InsertCustodian(ctx, rbsdb.InsertCustodianParams{
 
@@ -168,6 +168,10 @@ func main() {
 	//-------------------------------------------------------------------------
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: config.LogLevel})) // Level: parseLogLevel(config.LogLevel)}))
+
+	logger.Info("********************************************************************")
+	logger.Info("*** Seeding Custodian **********************************************")
+	logger.Info("********************************************************************")
 
 	logger.Info("Application config", "DB_USER", config.DB.User)
 	logger.Info("Application config", "DB_PASSWORD", config.DB.Password)
