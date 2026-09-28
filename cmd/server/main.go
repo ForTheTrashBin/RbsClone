@@ -277,10 +277,10 @@ func main() {
 
 		Handler:           routerHTTP, // http.HandlerFunc(httpHandlerWrapper.httpHandler),
 		Addr:              ":" + strconv.Itoa(int(config.GetHTTPPort())),
-		ReadTimeout:       3 * time.Second,
-		ReadHeaderTimeout: 3 * time.Second,
-		WriteTimeout:      3 * time.Second,
-		IdleTimeout:       3 * time.Second,
+		ReadTimeout:       20 * time.Second,
+		ReadHeaderTimeout: 20 * time.Second,
+		WriteTimeout:      20 * time.Second,
+		IdleTimeout:       20 * time.Second,
 	}
 
 	httpListener, err := net.Listen("tcp", serverHTTP.Addr)
@@ -354,10 +354,10 @@ func main() {
 
 		Handler:           routerHTTPS,
 		Addr:              ":" + strconv.Itoa(int(config.GetHTTPSPort())),
-		ReadTimeout:       3 * time.Second,
-		ReadHeaderTimeout: 3 * time.Second,
-		WriteTimeout:      3 * time.Second,
-		IdleTimeout:       3 * time.Second,
+		ReadTimeout:       20 * time.Second,
+		ReadHeaderTimeout: 20 * time.Second,
+		WriteTimeout:      20 * time.Second,
+		IdleTimeout:       20 * time.Second,
 	}
 
 	httpsListener, err := net.Listen("tcp", serverHTTPS.Addr)
