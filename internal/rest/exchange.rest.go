@@ -120,6 +120,8 @@ func (rs *RestServer) registerExchangeRoutes() {
 
 	huma.Get(group, "/id/{id}", func(ctx context.Context, request *ExchangeRequestId) (*ExchangeResponse, error) {
 
+		// time.Sleep(2000 * time.Millisecond)
+
 		dbresult, err := rs.dbQueries.GetExchangeById(ctx, request.ID)
 
 		if err != nil {
@@ -146,6 +148,8 @@ func (rs *RestServer) registerExchangeRoutes() {
 
 	huma.Get(group, "/shortcode/{shortcode}", func(ctx context.Context, request *ExchangeRequestShortcode) (*ExchangeResponse, error) {
 
+		// time.Sleep(2000 * time.Millisecond)
+
 		dbresult, err := rs.dbQueries.GetExchangeByShortcode(ctx, request.Shortcode)
 
 		if err != nil {
@@ -171,6 +175,8 @@ func (rs *RestServer) registerExchangeRoutes() {
 	//-------------------------------------------------------------------------
 
 	huma.Post(group, "", func(ctx context.Context, request *ExchangeRequestCreate) (*ExchangeResponseCreate, error) {
+
+		// time.Sleep(2000 * time.Millisecond)
 
 		insertParams := rbsdb.InsertExchangeParams{
 
@@ -202,6 +208,8 @@ func (rs *RestServer) registerExchangeRoutes() {
 
 	huma.Delete(group, "/{id}", func(ctx context.Context, request *ExchangeRequestId) (*struct{}, error) {
 
+		// time.Sleep(2000 * time.Millisecond)
+
 		dbResult, err := rs.dbQueries.DeleteExchange(ctx, request.ID)
 
 		if err != nil {
@@ -223,6 +231,8 @@ func (rs *RestServer) registerExchangeRoutes() {
 	//-------------------------------------------------------------------------
 
 	huma.Put(group, "/{id}", func(ctx context.Context, request *ExchangeRequestUpdate) (*ExchangeResponse, error) {
+
+		// time.Sleep(2000 * time.Millisecond)
 
 		updateParams := rbsdb.UpdateExchangeParams{
 

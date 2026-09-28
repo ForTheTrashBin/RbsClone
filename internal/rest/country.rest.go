@@ -124,6 +124,8 @@ func (rs *RestServer) registerCountryRoutes() {
 
 	huma.Get(group, "/id/{id}", func(ctx context.Context, request *CountryRequestId) (*CountryResponse, error) {
 
+		// time.Sleep(2000 * time.Millisecond)
+
 		dbresult, err := rs.dbQueries.GetCountryById(ctx, request.ID)
 
 		if err != nil {
@@ -150,6 +152,8 @@ func (rs *RestServer) registerCountryRoutes() {
 
 	huma.Get(group, "/shortcode/{shortcode}", func(ctx context.Context, request *CountryRequestShortcode) (*CountryResponse, error) {
 
+		// time.Sleep(2000 * time.Millisecond)
+
 		dbresult, err := rs.dbQueries.GetCountryByShortcode(ctx, request.Shortcode)
 
 		if err != nil {
@@ -175,6 +179,8 @@ func (rs *RestServer) registerCountryRoutes() {
 	//-------------------------------------------------------------------------
 
 	huma.Post(group, "", func(ctx context.Context, request *CountryRequestCreate) (*CountryResponseCreate, error) {
+
+		// time.Sleep(2000 * time.Millisecond)
 
 		insertParams := rbsdb.InsertCountryParams{
 
@@ -208,6 +214,8 @@ func (rs *RestServer) registerCountryRoutes() {
 
 	huma.Delete(group, "/{id}", func(ctx context.Context, request *CountryRequestId) (*struct{}, error) {
 
+		// time.Sleep(2000 * time.Millisecond)
+
 		dbResult, err := rs.dbQueries.DeleteCountry(ctx, request.ID)
 
 		if err != nil {
@@ -229,6 +237,8 @@ func (rs *RestServer) registerCountryRoutes() {
 	//-------------------------------------------------------------------------
 
 	huma.Put(group, "/{id}", func(ctx context.Context, request *CountryRequestUpdate) (*CountryResponse, error) {
+
+		// time.Sleep(2000 * time.Millisecond)
 
 		updateParams := rbsdb.UpdateCountryParams{
 

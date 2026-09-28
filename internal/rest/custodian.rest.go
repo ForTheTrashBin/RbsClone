@@ -124,6 +124,8 @@ func (rs *RestServer) registerCustodianRoutes() {
 
 	huma.Get(group, "/id/{id}", func(ctx context.Context, request *CustodianRequestId) (*CustodianResponse, error) {
 
+		// time.Sleep(2000 * time.Millisecond)
+
 		dbresult, err := rs.dbQueries.GetCustodianById(ctx, request.ID)
 
 		if err != nil {
@@ -150,6 +152,8 @@ func (rs *RestServer) registerCustodianRoutes() {
 
 	huma.Get(group, "/shortcode/{shortcode}", func(ctx context.Context, request *CustodianRequestShortcode) (*CustodianResponse, error) {
 
+		// time.Sleep(2000 * time.Millisecond)
+
 		dbresult, err := rs.dbQueries.GetCustodianByShortcode(ctx, request.Shortcode)
 
 		if err != nil {
@@ -175,6 +179,8 @@ func (rs *RestServer) registerCustodianRoutes() {
 	//-------------------------------------------------------------------------
 
 	huma.Post(group, "", func(ctx context.Context, request *CustodianRequestCreate) (*CustodianResponseCreate, error) {
+
+		// time.Sleep(2000 * time.Millisecond)
 
 		insertParams := rbsdb.InsertCustodianParams{
 
@@ -208,6 +214,8 @@ func (rs *RestServer) registerCustodianRoutes() {
 
 	huma.Delete(group, "/{id}", func(ctx context.Context, request *CustodianRequestId) (*struct{}, error) {
 
+		// time.Sleep(2000 * time.Millisecond)
+
 		dbResult, err := rs.dbQueries.DeleteCustodian(ctx, request.ID)
 
 		if err != nil {
@@ -229,6 +237,8 @@ func (rs *RestServer) registerCustodianRoutes() {
 	//-------------------------------------------------------------------------
 
 	huma.Put(group, "/{id}", func(ctx context.Context, request *CustodianRequestUpdate) (*CustodianResponse, error) {
+
+		// time.Sleep(2000 * time.Millisecond)
 
 		updateParams := rbsdb.UpdateCustodianParams{
 
