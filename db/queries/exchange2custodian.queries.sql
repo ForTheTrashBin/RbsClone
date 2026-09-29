@@ -1,23 +1,23 @@
 -- ============================================================================
--- Table: custodian2exchange
+-- Table: exchange2custodian
 -- ============================================================================
 
--- name: GetCustodian2ExchangeByIdexchangeAndIdcustodian :one
+-- name: GetExchange2CustodianByIdcustodianAndIdexchange :one
 
-SELECT * FROM CUSTODIAN2EXCHANGE WHERE idcustodian = $1 AND idexchange = $2 LIMIT 1;
+SELECT * FROM EXCHANGE2CUSTODIAN WHERE idcustodian = $1 AND idexchange = $2 LIMIT 1;
 
--- name: GetCustodian2ExchangeByIdcustodian :many
+-- name: GetExchange2CustodianByIdcustodian :many
 
-SELECT * FROM CUSTODIAN2EXCHANGE WHERE idcustodian = $1 ORDER BY sequenceno;
-
--- ----------------------------------------------------------------------------
-
--- name: InsertCustodian2Exchange :exec
-
-INSERT INTO CUSTODIAN2EXCHANGE (idcustodian, idexchange, sequenceno) VALUES ($1, $2, $3);
+SELECT * FROM EXCHANGE2CUSTODIAN WHERE idcustodian = $1 ORDER BY sequenceno;
 
 -- ----------------------------------------------------------------------------
 
--- name: DeleteCustodian2Exchange :execresult
+-- name: InsertExchange2Custodian :exec
 
-DELETE FROM CUSTODIAN2EXCHANGE WHERE idcustodian = $1 AND idexchange = $2;
+INSERT INTO EXCHANGE2CUSTODIAN (idcustodian, idexchange, sequenceno) VALUES ($1, $2, $3);
+
+-- ----------------------------------------------------------------------------
+
+-- name: DeleteExchange2Custodian :execresult
+
+DELETE FROM EXCHANGE2CUSTODIAN WHERE idcustodian = $1 AND idexchange = $2;

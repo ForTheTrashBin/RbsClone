@@ -1,6 +1,6 @@
 -- +goose up
 -- +goose StatementBegin
-CREATE TABLE custodian2exchange (
+CREATE TABLE exchange2custodian (
 
     idcustodian UUID NOT NULL,
     idexchange UUID NOT NULL,
@@ -18,6 +18,6 @@ CREATE TABLE custodian2exchange (
 -- +goose down
 
 -- +goose StatementBegin
-DROP TABLE custodian2exchange
+DROP TABLE exchange2custodian
 -- +goose StatementEnd
 

@@ -13,6 +13,7 @@ import (
 
 	"github.com/ForTheTrashBin/RbsClone/internal/rbsdb"
 	"github.com/ForTheTrashBin/RbsClone/internal/serverconfig"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -73,6 +74,8 @@ func seedCustodian2Exchange(logger *slog.Logger, dbPool *pgxpool.Pool) error {
 
 	defer cancel()
 
+	sequenceMap := make(map[uuid.UUID]int32)
+
 	for {
 		record, err := reader.Read()
 
@@ -92,24 +95,34 @@ func seedCustodian2Exchange(logger *slog.Logger, dbPool *pgxpool.Pool) error {
 		// Read data from CSV columns
 		//---------------------------------------------------------------------
 
-		shortcode_exchange := record[0]
 		shortcode_custodian := record[2]
+		shortcode_exchange := record[0]
 
-		exchange, err := baseQueries.GetExchangeByShortcode(ctx, shortcode_exchange)
+		custodian, err := baseQueries.GetCustodianByShortcode(ctx, shortcode_custodian)
 
 		if err == nil {
 
-			custodian, err := baseQueries.GetCustodianByShortcode(ctx, shortcode_custodian)
+			exchange, err := baseQueries.GetExchangeByShortcode(ctx, shortcode_exchange)
 
 			if err == nil {
 
-				err = baseQueries.InsertCustodian2Exchange(ctx, rbsdb.InsertCustodian2ExchangeParams{
+				sequenceno, exists := sequenceMap[custodian.ID]
 
-					Idexchange:  exchange.ID,
+				if exists {
+					sequenceno += 1
+				} else {
+					sequenceno = 1
+				}
+
+				sequenceMap[custodian.ID] = sequenceno
+
+				// fmt.Printf("Record: %s %s %d\n", custodian.ID, exchange.ID, sequenceno)
+
+				err = baseQueries.InsertExchange2Custodian(ctx, rbsdb.InsertExchange2CustodianParams{
+
 					Idcustodian: custodian.ID,
-					Flags:       0,
-					Value01:     "xxx",
-					Value02:     88,
+					Idexchange:  exchange.ID,
+					Sequenceno:  sequenceno,
 				})
 
 				if err != nil {
@@ -121,11 +134,11 @@ func seedCustodian2Exchange(logger *slog.Logger, dbPool *pgxpool.Pool) error {
 				}
 			} else {
 
-				logger.Error("Custodian not found", "custodian", shortcode_custodian, "error", err)
+				logger.Warn("Exchange not found", "exchange", shortcode_exchange, "error", err)
 			}
 		} else {
 
-			logger.Error("Exchange not found", "exchange", shortcode_exchange, "error", err)
+			logger.Warn("Custodian not found", "custodian", shortcode_custodian, "error", err)
 		}
 	}
 

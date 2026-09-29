@@ -39,7 +39,7 @@ func RegisterAllRoutes(logger *slog.Logger, dbPool *pgxpool.Pool, dbQueries *rbs
 	restServer.registerCountryRoutes()
 	restServer.registerCustodianRoutes()
 	restServer.registerExchangeRoutes()
-	restServer.registerCustodian2ExchangeRoutes()
+	restServer.registerExchange2CustodianRoutes()
 }
 
 //-----------------------------------------------------------------------------
