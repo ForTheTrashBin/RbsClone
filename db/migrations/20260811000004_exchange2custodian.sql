@@ -2,15 +2,13 @@
 -- +goose StatementBegin
 CREATE TABLE custodian2exchange (
 
-    idexchange UUID NOT NULL,
     idcustodian UUID NOT NULL,
+    idexchange UUID NOT NULL,
+    sequenceno int NOT NULL,
 
-    flags SMALLINT DEFAULT 0 NOT NULL,
+    PRIMARY KEY (idcustodian, idexchange),
 
-    value01 VARCHAR(80) NOT NULL,
-    value02 SMALLINT DEFAULT 0 NOT NULL,
-
-    PRIMARY KEY (idexchange, idcustodian),
+    CONSTRAINT cs_idcustodiansequenceno UNIQUE (idcustodian, sequenceno),
 
     CONSTRAINT fk_exchange  FOREIGN KEY (idexchange)  REFERENCES exchange(id) ON DELETE CASCADE,
     CONSTRAINT fk_custodian FOREIGN KEY (idcustodian) REFERENCES custodian(id) ON DELETE CASCADE
