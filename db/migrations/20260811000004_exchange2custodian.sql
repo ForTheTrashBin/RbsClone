@@ -6,6 +6,9 @@ CREATE TABLE exchange2custodian (
     idexchange UUID NOT NULL,
     sequenceno int NOT NULL,
 
+    value1 SMALLINT DEFAULT 0 NOT NULL,
+    value2 SMALLINT DEFAULT 0 NOT NULL,
+
     PRIMARY KEY (idcustodian, idexchange),
 
     CONSTRAINT cs_idcustodiansequenceno UNIQUE (idcustodian, sequenceno),

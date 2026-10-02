@@ -33,7 +33,7 @@ type CountryNoPK struct {
 	Shortcode  string `json:"shortcode" minLength:"2" maxLength:"2" doc:"A unique short name for this data"`
 	Name       string `json:"name" minLength:"1" maxLength:"80" doc:"A longer more descriptive description of this data"`
 	Flags      int16  `json:"flags" format:"int16" minimum:"0" doc:"Some binary encoded flags for this data (see external documentation)"`
-	Ibanlength *int16 `json:"ibanlenth,omitempty" format:"int16" minimum:"0" doc:"The exact length of the IBAN required in that country"`
+	Ibanlength *int16 `json:"ibanlenth,omitempty" format:"int16" minimum:"8" maximum:"34" doc:"The exact length of the IBAN required in that country"`
 	Risktype   int16  `json:"risktype" format:"int16" minimum:"0" doc:"This risk profile of this country"`
 }
 
@@ -42,7 +42,7 @@ type Country struct {
 	Shortcode  string    `json:"shortcode" minLength:"2" maxLength:"2" doc:"A unique short name for this data"`
 	Name       string    `json:"name" minLength:"1" maxLength:"80" doc:"A longer more descriptive description of this data"`
 	Flags      int16     `json:"flags" format:"int16" minimum:"0" doc:"Some binary encoded flags for this data (see external documentation)"`
-	Ibanlength *int16    `json:"ibanlenth,omitempty" format:"int16" minimum:"0" doc:"The exact length of the IBAN required in that country"`
+	Ibanlength *int16    `json:"ibanlenth,omitempty" format:"int16" minimum:"8" maximum:"34" doc:"The exact length of the IBAN required in that country"`
 	Risktype   int16     `json:"risktype" format:"int16" minimum:"0" doc:"This risk profile of this country"`
 }
 

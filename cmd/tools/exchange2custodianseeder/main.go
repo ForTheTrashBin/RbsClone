@@ -123,6 +123,8 @@ func seedCustodian2Exchange(logger *slog.Logger, dbPool *pgxpool.Pool) error {
 					Idcustodian: custodian.ID,
 					Idexchange:  exchange.ID,
 					Sequenceno:  sequenceno,
+					Value1:      17,
+					Value2:      28,
 				})
 
 				if err != nil {
