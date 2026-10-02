@@ -61,7 +61,7 @@ type Exchange2CustodianIdExchange struct {
 }
 
 type Exchange2CustodianIdExchangeDefault struct {
-	Idexchangedefault uuid.UUID `json:"idexchangedefault" format:"uuid" doc:"The id of the default-exchange"`
+	Idexchangedefault *uuid.UUID `json:"idexchangedefault,omitempty" format:"uuid" doc:"The id of the default-exchange"`
 }
 
 type Exchange2CustodianValue1 struct {
@@ -167,18 +167,18 @@ func (rs *RestServer) getExchange2CustodianDefaultList(ctx context.Context, IdCu
 	// If there are exchanges, the first is the default exchange
 	//-------------------------------------------------------------------------
 
-	var Idexchangedefault uuid.UUID = uuid.Nil
+	var idexchangedefault uuid.UUID = uuid.Nil
 
 	if len(dbExchange2Custodian) > 0 {
 
-		Idexchangedefault = dbExchange2Custodian[0].Idexchange
+		idexchangedefault = dbExchange2Custodian[0].Idexchange
 	}
 
 	//-------------------------------------------------------------------------
 	// Create the exchange-list and fill it with results from database
 	//-------------------------------------------------------------------------
 
-	exchange2CustodianList := &Exchange2CustodianList{
+	exchange2CustodianList := Exchange2CustodianList{
 
 		Exchanges: make([]Exchange2CustodianListItem, len(dbExchange2Custodian)),
 	}
@@ -194,7 +194,7 @@ func (rs *RestServer) getExchange2CustodianDefaultList(ctx context.Context, IdCu
 
 	//-------------------------------------------------------------------------
 
-	return exchange2CustodianList, &Idexchangedefault, nil
+	return &exchange2CustodianList, &idexchangedefault, nil
 }
 
 //-----------------------------------------------------------------------------
@@ -286,7 +286,7 @@ func (rs *RestServer) registerCustodianRoutes() {
 			return nil, huma.Error500InternalServerError("Internal server error")
 		}
 
-		if E2C_IdExchangeDefault == nil { // Should never be nil at this point
+		if E2C_IdExchangeDefault == nil { // Should never be nil at this point, but uuid.Nil at least
 
 			rs.logger.ErrorContext(ctx, OperationId, "error", fmt.Errorf("E2C_IdExchangeDefault is nil"))
 
@@ -349,7 +349,7 @@ func (rs *RestServer) registerCustodianRoutes() {
 			return nil, huma.Error500InternalServerError("Internal server error")
 		}
 
-		if E2C_IdExchangeDefault == nil { // Should never be nil at this point
+		if E2C_IdExchangeDefault == nil { // Should never be nil at this point, but uuid.Nil at least
 
 			rs.logger.ErrorContext(ctx, OperationId, "error", fmt.Errorf("E2C_IdExchangeDefault is nil"))
 
@@ -415,12 +415,17 @@ func (rs *RestServer) registerCustodianRoutes() {
 			// Step A: Find default-exchange in collection
 			//-----------------------------------------------------------------
 
-			index := slices.IndexFunc(request.Body.Exchanges,
+			var index int = -1
 
-				func(entry Exchange2CustodianListItem) bool {
+			if request.Body.Idexchangedefault != nil {
 
-					return entry.Idexchange == request.Body.Idexchangedefault
-				})
+				index = slices.IndexFunc(request.Body.Exchanges,
+
+					func(entry Exchange2CustodianListItem) bool {
+
+						return entry.Idexchange == *request.Body.Idexchangedefault
+					})
+			}
 
 			if index < 0 {
 
@@ -481,9 +486,16 @@ func (rs *RestServer) registerCustodianRoutes() {
 
 		tx.Commit(ctx)
 
+		var idexchangedefault uuid.UUID = uuid.Nil
+
+		if request.Body.Idexchangedefault != nil {
+
+			idexchangedefault = *request.Body.Idexchangedefault
+		}
+
 		return &CustodianResponseCreate{
 			Header: LocationHeader{Location: fmt.Sprintf("/custodian/id/%s", dbNewCustodian.ID.String())},
-			Body:   mapDB2APICustodian(dbNewCustodian, request.Body.Exchange2CustodianList, request.Body.Idexchangedefault),
+			Body:   mapDB2APICustodian(dbNewCustodian, request.Body.Exchange2CustodianList, idexchangedefault),
 		}, nil
 
 	}, describeEndpoint("createCustodian", "Create a new custodian"), defaultStatus(http.StatusCreated))
@@ -584,12 +596,17 @@ func (rs *RestServer) registerCustodianRoutes() {
 			// Step B: Find default-exchange in collection
 			//-----------------------------------------------------------------
 
-			index := slices.IndexFunc(request.Body.Exchanges,
+			var index int = -1
 
-				func(entry Exchange2CustodianListItem) bool {
+			if request.Body.Idexchangedefault != nil {
 
-					return entry.Idexchange == request.Body.Idexchangedefault
-				})
+				index = slices.IndexFunc(request.Body.Exchanges,
+
+					func(entry Exchange2CustodianListItem) bool {
+
+						return entry.Idexchange == *request.Body.Idexchangedefault
+					})
+			}
 
 			if index < 0 {
 
@@ -650,7 +667,14 @@ func (rs *RestServer) registerCustodianRoutes() {
 
 		tx.Commit(ctx)
 
-		return &CustodianResponse{Body: mapDB2APICustodian(dbUpdatedCustodian, request.Body.Exchange2CustodianList, request.Body.Idexchangedefault)}, nil
+		var idexchangedefault uuid.UUID = uuid.Nil
+
+		if request.Body.Idexchangedefault != nil {
+
+			idexchangedefault = *request.Body.Idexchangedefault
+		}
+
+		return &CustodianResponse{Body: mapDB2APICustodian(dbUpdatedCustodian, request.Body.Exchange2CustodianList, idexchangedefault)}, nil
 
 	}, describeEndpoint("updateCustodian", "Update an existing custodian based on the id supplied")) // huma-Defaultstatus = http.StatusOk
 }
@@ -666,22 +690,21 @@ func mapDB2APICustodianListItem(record rbsdb.Custodian) CustodianListItem {
 	}
 }
 
-func mapDB2APICustodian(record rbsdb.Custodian, exchange2CustodianList Exchange2CustodianList, IdExchangeDefault uuid.UUID) Custodian {
+func mapDB2APICustodian(record rbsdb.Custodian, exchange2custodianlist Exchange2CustodianList, idexchangedefault uuid.UUID) Custodian {
 
-	return Custodian{
-
-		CustodianId:                         CustodianId{ID: record.ID},
-		CustodianShortcode:                  CustodianShortcode{Shortcode: record.Shortcode},
-		CustodianName:                       CustodianName{Name: record.Name},
-		CustodianFlags:                      CustodianFlags{Flags: record.Flags},
-		CustodianIdCountry:                  CustodianIdCountry{Idcountry: record.Idcountry},
-		CustodianDepotNo:                    CustodianDepotNo{Depotno: mapFromNullString(record.Depotno)},
-		Exchange2CustodianIdExchangeDefault: Exchange2CustodianIdExchangeDefault{Idexchangedefault: IdExchangeDefault},
-
-		Exchange2CustodianList: Exchange2CustodianList{
-			Exchanges: exchange2CustodianList.Exchanges,
-		},
-
-		// Exchanges:          exchange2CustodianDefaultList,
+	var custodian = &Custodian{
+		CustodianId:            CustodianId{ID: record.ID},
+		CustodianShortcode:     CustodianShortcode{Shortcode: record.Shortcode},
+		CustodianName:          CustodianName{Name: record.Name},
+		CustodianFlags:         CustodianFlags{Flags: record.Flags},
+		CustodianIdCountry:     CustodianIdCountry{Idcountry: record.Idcountry},
+		Exchange2CustodianList: Exchange2CustodianList{Exchanges: exchange2custodianlist.Exchanges},
 	}
+
+	if idexchangedefault != uuid.Nil {
+
+		custodian.Exchange2CustodianIdExchangeDefault.Idexchangedefault = &idexchangedefault
+	}
+
+	return *custodian
 }
