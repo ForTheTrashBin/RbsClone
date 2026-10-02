@@ -12,9 +12,16 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 //-----------------------------------------------------------------------------
+
+type LocationHeader struct {
+	Location string `header:"Location" doc:"URL of the newly created entity"`
+}
+
 //-----------------------------------------------------------------------------
 
 type RestServer struct {
@@ -39,7 +46,6 @@ func RegisterAllRoutes(logger *slog.Logger, dbPool *pgxpool.Pool, dbQueries *rbs
 	restServer.registerCountryRoutes()
 	restServer.registerCustodianRoutes()
 	restServer.registerExchangeRoutes()
-	restServer.registerExchange2CustodianRoutes()
 }
 
 //-----------------------------------------------------------------------------
@@ -83,13 +89,40 @@ func (rs *RestServer) registerUtilities() {
 
 //-----------------------------------------------------------------------------
 
+type operationIdType string
+
+const operationIdKey operationIdType = "MyOperationIdKey"
+
+func getOperationIdFromContext(ctx context.Context) string {
+
+	if operationIdFromContext, ok := ctx.Value(operationIdKey).(string); ok {
+
+		return cases.Title(language.Und, cases.NoLower).String(operationIdFromContext)
+	} else {
+
+		return "No operationId set as value of context!"
+	}
+}
+
 func describeEndpoint(operationID string, summaryAndDescription string) func(op *huma.Operation) {
 
 	return func(op *huma.Operation) {
 
 		op.OperationID = operationID
+
 		op.Summary = summaryAndDescription
 		op.Description = summaryAndDescription
+
+		//---------------------------------------------------------------------
+
+		op.Middlewares = append(op.Middlewares, func(humaCtx huma.Context, next func(huma.Context)) {
+
+			newCtx := context.WithValue(humaCtx.Context(), operationIdKey, op.OperationID)
+
+			humaCtx = huma.WithContext(humaCtx, newCtx)
+
+			next(humaCtx)
+		})
 	}
 }
 

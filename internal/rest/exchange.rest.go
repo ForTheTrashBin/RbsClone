@@ -23,33 +23,59 @@ import (
 //
 //-----------------------------------------------------------------------------
 
+type ExchangeId struct {
+	ID uuid.UUID `json:"id" format:"uuid" doc:"This is the unique identifier a this data"`
+}
+
+type ExchangeIdPath struct {
+	ID uuid.UUID `path:"id" format:"uuid" doc:"This is the unique identifier a this data"`
+}
+
+type ExchangeShortcode struct {
+	Shortcode string `json:"shortcode" minLength:"1" maxLength:"8" doc:"A unique short name for this data"`
+}
+
+type ExchangeShortcodePath struct {
+	Shortcode string `path:"shortcode" minLength:"1" maxLength:"8" doc:"A unique short name for this data"`
+}
+
+type ExchangeName struct {
+	Name string `json:"name" minLength:"1" maxLength:"80" doc:"A longer more descriptive description of this data"`
+}
+
+type ExchangeFlags struct {
+	Flags int16 `json:"flags" format:"int16" minimum:"0" doc:"Some binary encoded flags for this data (see external documentation)"`
+}
+
+//-----------------------------------------------------------------------------
+
 type ExchangeListItem struct {
-	ID        uuid.UUID `json:"id" format:"uuid" doc:"This is the unique identifier a this data"`
-	Shortcode string    `json:"shortcode" minLength:"1" maxLength:"8" doc:"A unique short name for this data"`
-	Name      string    `json:"name" minLength:"1" maxLength:"80" doc:"A longer more descriptive description of this data"`
+	ExchangeId
+	ExchangeShortcode
+	ExchangeName
 }
 
 type ExchangeNoPK struct {
-	Shortcode string `json:"shortcode" minLength:"1" maxLength:"8" doc:"A unique short name for this data"`
-	Name      string `json:"name" minLength:"1" maxLength:"80" doc:"A longer more descriptive description of this data"`
-	Flags     int16  `json:"flags" format:"int16" minimum:"0" doc:"Some binary encoded flags for this data (see external documentation)"`
+	ExchangeShortcode
+	ExchangeName
+	ExchangeFlags
 }
 
 type Exchange struct {
-	ID        uuid.UUID `json:"id" format:"uuid" doc:"This is the unique identifier a this data"`
-	Shortcode string    `json:"shortcode" minLength:"1" maxLength:"8" doc:"A unique short name for this data"`
-	Name      string    `json:"name" minLength:"1" maxLength:"80" doc:"A longer more descriptive description of this data"`
-	Flags     int16     `json:"flags" format:"int16" minimum:"0" doc:"Some binary encoded flags for this data (see external documentation)"`
+	ExchangeId
+	ExchangeShortcode
+	ExchangeName
+	ExchangeFlags
 }
 
 //-----------------------------------------------------------------------------
 
 type ExchangeRequestId struct {
-	ID uuid.UUID `path:"id" format:"uuid" doc:"This is the unique identifier a this data"`
+	ExchangeIdPath
 }
 
 type ExchangeRequestShortcode struct {
-	Shortcode string `path:"shortcode" minLength:"1" maxLength:"8" doc:"This is the unique identifier a this data"`
+	ExchangeShortcodePath
 }
 
 type ExchangeRequestCreate struct {
@@ -57,26 +83,23 @@ type ExchangeRequestCreate struct {
 }
 
 type ExchangeRequestUpdate struct {
-	ID   uuid.UUID `path:"id" format:"uuid" doc:"This is the unique identifier a this data"`
+	ExchangeIdPath
 	Body ExchangeNoPK
 }
 
 //-----------------------------------------------------------------------------
 
-type ExchangeResponseCreate struct {
-	Header struct {
-		Location string `header:"Location" doc:"URL of the newly created entity"`
-	}
+type ExchangeResponseList struct {
+	Body []ExchangeListItem
+}
 
-	Body Exchange
+type ExchangeResponseCreate struct {
+	Header LocationHeader
+	Body   Exchange
 }
 
 type ExchangeResponse struct {
 	Body Exchange
-}
-
-type ExchangeListResponse struct {
-	Body []ExchangeListItem
 }
 
 //-----------------------------------------------------------------------------
@@ -94,13 +117,15 @@ func (rs *RestServer) registerExchangeRoutes() {
 
 	//-------------------------------------------------------------------------
 
-	huma.Get(group, "", func(ctx context.Context, request *struct{}) (*ExchangeListResponse, error) {
+	huma.Get(group, "", func(ctx context.Context, request *struct{}) (*ExchangeResponseList, error) {
+
+		OperationId := getOperationIdFromContext(ctx)
 
 		dbSlice, err := rs.dbQueries.GetExchanges(ctx)
 
 		if err != nil {
 
-			rs.logger.ErrorContext(ctx, "ListExchanges", "error", err)
+			rs.logger.ErrorContext(ctx, OperationId, "error", err)
 
 			return nil, mapDBError(err)
 		}
@@ -112,7 +137,7 @@ func (rs *RestServer) registerExchangeRoutes() {
 			result[idx] = mapDB2APIExchangeListItem(dbData)
 		}
 
-		return &ExchangeListResponse{Body: result}, nil
+		return &ExchangeResponseList{Body: result}, nil
 
 	}, describeEndpoint("getExchanges", "Get a list of all exchanges"))
 
@@ -121,6 +146,8 @@ func (rs *RestServer) registerExchangeRoutes() {
 	huma.Get(group, "/id/{id}", func(ctx context.Context, request *ExchangeRequestId) (*ExchangeResponse, error) {
 
 		// time.Sleep(2000 * time.Millisecond)
+
+		OperationId := getOperationIdFromContext(ctx)
 
 		dbresult, err := rs.dbQueries.GetExchangeById(ctx, request.ID)
 
@@ -132,7 +159,7 @@ func (rs *RestServer) registerExchangeRoutes() {
 
 			} else {
 
-				rs.logger.ErrorContext(ctx, "ReadExchangeById", "error", err)
+				rs.logger.ErrorContext(ctx, OperationId, "error", err)
 
 				return nil, mapDBError(err)
 			}
@@ -150,6 +177,8 @@ func (rs *RestServer) registerExchangeRoutes() {
 
 		// time.Sleep(2000 * time.Millisecond)
 
+		OperationId := getOperationIdFromContext(ctx)
+
 		dbresult, err := rs.dbQueries.GetExchangeByShortcode(ctx, request.Shortcode)
 
 		if err != nil {
@@ -160,7 +189,7 @@ func (rs *RestServer) registerExchangeRoutes() {
 
 			} else {
 
-				rs.logger.ErrorContext(ctx, "ReadExchangeById", "error", err)
+				rs.logger.ErrorContext(ctx, OperationId, "error", err)
 
 				return nil, mapDBError(err)
 			}
@@ -178,6 +207,8 @@ func (rs *RestServer) registerExchangeRoutes() {
 
 		// time.Sleep(2000 * time.Millisecond)
 
+		OperationId := getOperationIdFromContext(ctx)
+
 		insertParams := rbsdb.InsertExchangeParams{
 
 			Shortcode: request.Body.Shortcode,
@@ -189,18 +220,15 @@ func (rs *RestServer) registerExchangeRoutes() {
 
 		if err != nil {
 
-			rs.logger.ErrorContext(ctx, "CreateExchange", "error", err)
+			rs.logger.ErrorContext(ctx, OperationId, "error", err)
 
 			return nil, mapDBError(err)
 		}
 
-		response := ExchangeResponseCreate{}
-
-		response.Header.Location = fmt.Sprintf("/exchange/id/%s", dbResult.ID.String())
-
-		response.Body = mapDB2APIExchange(dbResult)
-
-		return &response, nil
+		return &ExchangeResponseCreate{
+			Header: LocationHeader{Location: fmt.Sprintf("/exchange/id/%s", dbResult.ID.String())},
+			Body:   mapDB2APIExchange(dbResult),
+		}, nil
 
 	}, describeEndpoint("createExchange", "Create a new exchange"), defaultStatus(http.StatusCreated))
 
@@ -210,11 +238,13 @@ func (rs *RestServer) registerExchangeRoutes() {
 
 		// time.Sleep(2000 * time.Millisecond)
 
+		OperationId := getOperationIdFromContext(ctx)
+
 		dbResult, err := rs.dbQueries.DeleteExchange(ctx, request.ID)
 
 		if err != nil {
 
-			rs.logger.ErrorContext(ctx, "DeleteExchange", "error", err)
+			rs.logger.ErrorContext(ctx, OperationId, "error", err)
 
 			return nil, mapDBError(err)
 		}
@@ -234,6 +264,8 @@ func (rs *RestServer) registerExchangeRoutes() {
 
 		// time.Sleep(2000 * time.Millisecond)
 
+		OperationId := getOperationIdFromContext(ctx)
+
 		updateParams := rbsdb.UpdateExchangeParams{
 
 			ID:        request.ID,
@@ -251,16 +283,12 @@ func (rs *RestServer) registerExchangeRoutes() {
 				return nil, huma.Error404NotFound("")
 			}
 
-			rs.logger.ErrorContext(ctx, "UpdateCountry", "error", err)
+			rs.logger.ErrorContext(ctx, OperationId, "error", err)
 
 			return nil, mapDBError(err)
 		}
 
-		response := ExchangeResponse{}
-
-		response.Body = mapDB2APIExchange(dbResult)
-
-		return &response, nil
+		return &ExchangeResponse{Body: mapDB2APIExchange(dbResult)}, nil
 
 	}, describeEndpoint("updateExchange", "Update an existing exchange based on the id supplied")) // huma-Defaultstatus = http.StatusOk
 }
@@ -270,10 +298,9 @@ func (rs *RestServer) registerExchangeRoutes() {
 func mapDB2APIExchangeListItem(record rbsdb.Exchange) ExchangeListItem {
 
 	return ExchangeListItem{
-
-		ID:        record.ID,
-		Shortcode: record.Shortcode,
-		Name:      record.Name,
+		ExchangeId:        ExchangeId{ID: record.ID},
+		ExchangeShortcode: ExchangeShortcode{Shortcode: record.Shortcode},
+		ExchangeName:      ExchangeName{Name: record.Name},
 	}
 }
 
@@ -281,9 +308,9 @@ func mapDB2APIExchange(record rbsdb.Exchange) Exchange {
 
 	return Exchange{
 
-		ID:        record.ID,
-		Shortcode: record.Shortcode,
-		Name:      record.Name,
-		Flags:     record.Flags,
+		ExchangeId:        ExchangeId{ID: record.ID},
+		ExchangeShortcode: ExchangeShortcode{Shortcode: record.Shortcode},
+		ExchangeName:      ExchangeName{Name: record.Name},
+		ExchangeFlags:     ExchangeFlags{Flags: record.Flags},
 	}
 }
