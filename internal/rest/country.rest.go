@@ -48,7 +48,7 @@ type CountryFlags struct {
 }
 
 type CountryIbanlength struct {
-	Ibanlength *int16 `json:"ibanlenth,omitempty" format:"int16" minimum:"8" maximum:"34" doc:"The exact length of the IBAN required in that country"`
+	Ibanlength *int16 `json:"ibanlength,omitempty" format:"int16" minimum:"8" maximum:"34" doc:"The exact length of the IBAN required in that country"`
 }
 
 type CountryRisktype struct {

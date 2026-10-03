@@ -151,9 +151,9 @@ func (apiClient *ApiClient) GetCountries() error {
 
 		var ibanlength int16 = 0
 
-		if country.Ibanlenth != nil {
+		if country.Ibanlength != nil {
 
-			ibanlength = *country.Ibanlenth
+			ibanlength = *country.Ibanlength
 		}
 
 		fmt.Printf("%s, %s, %s, %d, %d, %d\n",
